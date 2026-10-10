@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boost — ma console de progrès</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9e9eb; --surface:#ffffff; --surface2:#f4f4f6; --ink:#262629; --muted:#66666e; --line:#d4d4da;
+  --bezel:#1f1f23; --jl:#ff4554; --jr:#00c3e3; --ok:#18b26b; --warn:#f2a900;
+  --display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Lexend","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#2b2b2f; --surface:#3a3a40; --surface2:#33333a; --ink:#f3f3f5; --muted:#b4b4bd; --line:#4b4b53; --bezel:#111114;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#2b2b2f; --surface:#3a3a40; --surface2:#33333a; --ink:#f3f3f5; --muted:#b4b4bd; --line:#4b4b53; --bezel:#111114;
+}
+*,*:before,*:after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bezel);color:var(--ink);font-family:var(--body);line-height:1.5;-webkit-tap-highlight-color:transparent;overflow:hidden}
+body.spacing{letter-spacing:.03em;word-spacing:.14em;line-height:1.8}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea{font:inherit;color:var(--ink)}
+:focus-visible{outline:3px solid var(--jr);outline-offset:3px}
+img{max-width:100%}
+
+/* ---------- Console shell ---------- */
+.shell{height:100%;display:flex;align-items:stretch;justify-content:center}
+.grip{display:none}
+.screen{flex:1;min-width:0;height:100%;background:var(--bg);position:relative;display:flex;flex-direction:column;overflow:hidden;
+  border-left:5px solid var(--jl);border-right:5px solid var(--jr)}
+@media (min-width:900px){
+  .shell{padding:22px 0}
+  .grip{display:flex;flex-direction:column;align-items:center;justify-content:space-around;width:96px;flex:0 0 96px;padding:30px 0}
+  .grip.l{background:var(--jl);border-radius:48px 0 0 48px}
+  .grip.r{background:var(--jr);border-radius:0 48px 48px 0}
+  .screen{max-width:1100px;border:16px solid var(--bezel);border-radius:6px;flex:0 1 1100px}
+  .stick{width:52px;height:52px;border-radius:50%;background:#2a2a2e;box-shadow:inset 0 -5px 0 rgba(0,0,0,.35),0 3px 0 rgba(0,0,0,.25)}
+  .pad{width:76px;height:76px;position:relative}
+  .pad span{position:absolute;width:24px;height:24px;border-radius:50%;background:#2a2a2e;box-shadow:inset 0 -3px 0 rgba(0,0,0,.4);color:#cfcfd6;font:600 11px/24px var(--display);text-align:center}
+  .pad span:nth-child(1){left:26px;top:0}.pad span:nth-child(2){left:52px;top:26px}.pad span:nth-child(3){left:26px;top:52px}.pad span:nth-child(4){left:0;top:26px}
+  .mini{width:20px;height:6px;border-radius:3px;background:#2a2a2e}
+  .home-btn{width:22px;height:22px;border-radius:50%;background:#2a2a2e;border:3px solid rgba(255,255,255,.35)}
+  .sq{width:20px;height:20px;border-radius:5px;background:#2a2a2e}
+}
+@media (max-width:899px){ .screen{border-width:0 4px} }
+
+/* ---------- Top bar ---------- */
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 20px 8px;flex:0 0 auto}
+.me{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;text-align:left}
+.av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:26px;background:var(--surface);border:3px solid var(--jr);flex:0 0 auto}
+.me b{font:600 1.05rem var(--display);display:block;line-height:1.1}
+.me small{color:var(--muted);font-size:.78rem}
+.spacer{flex:1}
+.pill{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:999px;padding:6px 12px;font:600 .95rem var(--display);border:1px solid var(--line)}
+.clock{font:500 1.05rem var(--display);color:var(--muted);min-width:48px;text-align:right}
+.xpwrap{padding:0 20px 6px}
+.xpbar{height:10px;border-radius:5px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--jl),var(--jr));border-radius:5px;transition:width .6s}
+.xptxt{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:3px}
+
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:6px 20px 28px}
+
+/* ---------- Home ---------- */
+.inbox{display:flex;align-items:center;gap:10px;width:100%;margin:6px 0 4px;padding:10px 14px;border-radius:14px;border:2px dashed var(--jl);background:var(--surface);text-align:left;font-weight:500}
+.tile-title{font:600 1.5rem var(--display);margin:18px 2px 10px;min-height:2.2rem;color:var(--jr)}
+.tiles{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 6px 18px;margin:0 -6px}
+.tile{flex:0 0 auto;width:min(42vw,210px);aspect-ratio:1/1;border-radius:8px;border:0;padding:0;position:relative;scroll-snap-align:start;
+  background:var(--t1);box-shadow:0 2px 0 rgba(0,0,0,.12);overflow:hidden;color:#fff;text-align:left}
+.tile .art{position:absolute;inset:0;display:grid;place-items:center;font-size:min(16vw,84px);
+  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%),linear-gradient(150deg,var(--t1),var(--t2))}
+.tile .nm{position:absolute;left:10px;bottom:9px;right:10px;font:600 .95rem/1.15 var(--display);text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.tile .bdg{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.45);border-radius:999px;padding:2px 9px;font:600 .78rem var(--display)}
+.tile.on,.tile:focus-visible{outline:none;box-shadow:0 0 0 4px var(--bg),0 0 0 8px var(--jr)}
+.tile.on{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 4px var(--bg),0 0 0 8px var(--jl)}}
+.rbtns{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:12px 0 6px}
+.rbtn{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;width:76px}
+.rbtn .c{width:58px;height:58px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:26px;border:1px solid var(--line);box-shadow:0 2px 0 var(--line)}
+.rbtn span:last-child{font-size:.74rem;color:var(--muted);text-align:center;line-height:1.2}
+.rbtn.on .c,.rbtn:focus-visible .c{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--jr)}
+.rbtn:focus-visible{outline:none}
+.hints{display:none;justify-content:flex-end;gap:18px;padding:8px 20px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:.82rem;flex:0 0 auto}
+.hints b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font:600 .75rem var(--display);margin-right:6px}
+@media (min-width:900px){.hints{display:flex}}
+.today{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.today div{flex:1 1 140px;background:var(--surface);border-radius:12px;padding:10px 14px;border:1px solid var(--line)}
+.today b{font:600 1.4rem var(--display);display:block}
+.today span{font-size:.8rem;color:var(--muted)}
+
+/* ---------- Sub screens ---------- */
+.subhead{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;flex:0 0 auto;border-bottom:1px solid var(--line)}
+.backbtn{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 10px;font:600 .9rem var(--display)}
+.subhead h1{font:600 1.35rem var(--display);margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lead{color:var(--muted);margin:14px 0 16px;max-width:62ch}
+h2{font:600 1.15rem var(--display);margin:22px 0 10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;align-items:center;gap:12px}
+.list{display:flex;flex-direction:column;gap:10px}
+.mission{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--jr);border-radius:12px;padding:12px}
+.mission.done{border-left-color:var(--ok)}
+.mission .ic{font-size:28px;flex:0 0 auto}
+.mission .tx{flex:1;min-width:0}
+.mission .tx b{display:block;font-weight:500}
+.mission .tx small{color:var(--muted)}
+.btn{border:0;border-radius:999px;padding:10px 18px;font:600 .95rem var(--display);background:var(--jr);color:#fff;white-space:nowrap}
+.btn.l{background:var(--jl)}
+.btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+.btn.ok{background:var(--ok)}
+.btn:disabled{opacity:.55;cursor:default}
+.icon-btn{background:var(--surface2);border:1px solid var(--line);border-radius:50%;width:38px;height:38px;display:grid;place-items:center;font-size:17px;flex:0 0 auto;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.88rem;text-align:left}
+.chip.sel{border:2px solid var(--jr);background:var(--surface2)}
+.field{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:1rem}
+textarea.field{min-height:90px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.need{border:0;border-radius:16px;padding:14px 12px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;background:var(--surface);border:1px solid var(--line);position:relative}
+.need .e{font-size:34px}
+.need b{font:600 1rem/1.2 var(--display)}
+.skill{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left}
+.skill .e{font-size:26px}
+.skill .tx{flex:1}
+.skill small{display:block;color:var(--muted);font-size:.8rem}
+.bars{display:flex;gap:4px;align-items:flex-end}
+.bars i{width:10px;border-radius:3px;background:var(--line)}
+.bars i:nth-child(1){height:10px}.bars i:nth-child(2){height:16px}.bars i:nth-child(3){height:22px}.bars i:nth-child(4){height:28px}
+.bars i.f{background:linear-gradient(var(--jr),var(--jl))}
+.save{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.save .dt{font:600 .8rem var(--display);color:#fff;background:var(--jl);border-radius:8px;padding:6px 8px;text-align:center;min-width:54px;line-height:1.15}
+.reward{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.reward .e{font-size:30px;width:52px;height:52px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;flex:0 0 auto}
+.reward .tx{flex:1;min-width:0}
+.reward small{color:var(--muted)}
+.lockgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:10px}
+.pick{aspect-ratio:1/1;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:34px;display:grid;place-items:center;position:relative;padding:0}
+.pick.sel{border:4px solid var(--jr)}
+.pick.lock{opacity:.4;font-size:26px}
+.pick .lv{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font:600 .65rem var(--display);padding:1px 6px;border-radius:999px;white-space:nowrap}
+.consoles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.cons{border:2px solid var(--line);border-radius:14px;background:var(--surface);padding:10px;text-align:left;position:relative}
+.cons.sel{border:3px solid var(--ink)}
+.cons.lock{opacity:.45}
+.cons .mock{display:flex;height:44px;border-radius:10px;overflow:hidden;margin-bottom:8px}
+.cons .mock i{flex:0 0 22%}
+.cons .mock em{flex:1;background:var(--bezel)}
+.cons b{font:600 .9rem var(--display);display:block}
+.cons small{color:var(--muted);font-size:.75rem}
+.trophy{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.trophy .e{font-size:30px;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);flex:0 0 auto}
+.trophy.lock .e{filter:grayscale(1);opacity:.35}
+.trophy.lock b{color:var(--muted)}
+.trophy small{color:var(--muted);display:block}
+.moods{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.moodb{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.moodb .e{font-size:44px}
+.moodb.sel{border:3px solid var(--jr)}
+.week{display:flex;gap:8px;flex-wrap:wrap}
+.week div{width:52px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 0;font-size:.72rem;color:var(--muted)}
+.week span{display:block;font-size:22px}
+.seg{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:8px 10px;font:600 .9rem var(--display)}
+.seg button.sel{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.18);color:var(--jr)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.sw{width:54px;height:32px;border-radius:16px;background:var(--line);border:0;position:relative;flex:0 0 auto;padding:0}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw.on{background:var(--ok)}
+.sw.on:after{left:25px}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat3 div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat3 b{font:600 1.5rem var(--display);display:block;color:var(--jr)}
+.stat3 span{font-size:.75rem;color:var(--muted)}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.note{font-size:.82rem;color:var(--muted);margin-top:8px}
+.danger{color:#d93a3a}
+.hidden{display:none!important}
+
+/* ---------- Profiles ---------- */
+.who{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;overflow-y:auto}
+.who h1{font:600 1.7rem var(--display);margin:0 0 26px}
+.users{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;max-width:720px}
+.user{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:8px;width:96px;padding:0}
+.user .av{width:88px;height:88px;font-size:46px;border-width:4px}
+.user span{font:600 .95rem var(--display);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user small{color:var(--muted);font-size:.75rem}
+.user.add .av{border-style:dashed;border-color:var(--muted);font-size:36px;color:var(--muted)}
+.user:focus-visible{outline:none}.user:focus-visible .av{box-shadow:0 0 0 4px var(--bg),0 0 0 8px var(--jr)}
+
+/* ---------- Boot ---------- */
+.boot{position:fixed;inset:0;z-index:50;background:var(--bezel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;color:#fff;border:0;width:100%;padding:0}
+.boot .logo{display:flex;gap:6px;align-items:center}
+.boot .logo i{display:block;width:34px;height:76px;border-radius:17px}
+.boot .logo i.a{background:var(--jl);animation:slideL .7s cubic-bezier(.2,.9,.3,1.3) both}
+.boot .logo i.b{background:var(--jr);animation:slideR .7s cubic-bezier(.2,.9,.3,1.3) both}
+.boot .logo em{font:700 3.2rem var(--display);font-style:normal;padding:0 10px;animation:fade .6s .5s both}
+.boot p{margin:0;font:500 1.05rem var(--display);opacity:.75;animation:blink 1.6s 1.1s infinite both}
+@keyframes slideL{from{transform:translateX(-60vw)}}
+@keyframes slideR{from{transform:translateX(60vw)}}
+@keyframes fade{from{opacity:0;transform:scale(.8)}}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:.9}}
+
+/* ---------- Modal / toast ---------- */
+.modal{position:fixed;inset:0;z-index:40;background:rgba(10,10,14,.6);display:flex;align-items:center;justify-content:center;padding:18px;padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.box{background:var(--bg);border-radius:20px;width:100%;max-width:480px;max-height:100%;overflow-y:auto;padding:22px;position:relative}
+.box h2{margin-top:0}
+.close{position:absolute;top:12px;right:12px}
+.bigcard{border-radius:24px;padding:28px 22px;color:#fff;text-align:center;background:linear-gradient(150deg,var(--jl),var(--jr));box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.bigcard .e{font-size:72px;line-height:1}
+.bigcard h3{font:600 1.7rem/1.2 var(--display);margin:14px 0 8px}
+.bigcard p{font-size:1.1rem;margin:0 0 6px}
+.bigcard small{opacity:.9}
+.toasts{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
+.toast{background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font:600 .95rem var(--display);box-shadow:0 6px 18px rgba(0,0,0,.25);animation:tin .35s both}
+.toast.gold{background:linear-gradient(90deg,var(--jl),var(--jr));color:#fff}
+@keyframes tin{from{opacity:0;transform:translateY(-14px)}}
+.lvl{text-align:center}
+.lvl .num{font:700 5rem/1 var(--display);background:linear-gradient(150deg,var(--jl),var(--jr));-webkit-background-clip:text;background-clip:text;color:transparent}
+.burst{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:20px}
+.burst i{position:absolute;top:40%;left:50%;font-style:normal;font-size:22px;animation:fly 1.2s ease-out both}
+@keyframes fly{to{transform:translate(var(--x),var(--y)) rotate(200deg);opacity:0}}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:16px auto 0}
+.keypad button{height:58px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font:600 1.3rem var(--display)}
+.dots{display:flex;justify-content:center;gap:14px;margin-top:8px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink)}
+.dots i.f{background:var(--ink)}
+.chart{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.rates{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.rate{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.rate.sel{border:3px solid var(--jr)}
+.rate span{font-size:.85rem;text-align:center}
+
+/* ---------- Cadres d'avatar ---------- */
+.av.fr-etoiles{border:3px dotted #f5b400;box-shadow:0 0 0 3px var(--bg),0 0 0 5px #f5b400}
+.av.fr-feu{border-color:#ff6a00;box-shadow:0 0 14px #ff6a00}
+.av.fr-arc{border-color:transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,conic-gradient(#ff4554,#ffb800,#2fd36f,#00c3e3,#8b5cf6,#ff4554) border-box}
+.av.fr-or{border:4px double #d4a017;box-shadow:0 0 12px rgba(212,160,23,.7)}
+.framepick{border:2px solid var(--line);background:var(--surface2);border-radius:14px;padding:12px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.framepick.sel{border:3px solid var(--jr)}
+.framepick.lock{opacity:.45}
+.framepick small{font-size:.75rem;color:var(--muted)}
+/* ---------- Fonds d'écran ---------- */
+.wp-nuages{background-image:radial-gradient(ellipse 180px 60px at 15% 22%,rgba(255,255,255,.5),transparent 70%),radial-gradient(ellipse 240px 70px at 80% 55%,rgba(255,255,255,.4),transparent 70%),radial-gradient(ellipse 160px 50px at 35% 88%,rgba(255,255,255,.35),transparent 70%),linear-gradient(180deg,rgba(0,170,220,.14),rgba(0,170,220,0))}
+.wp-pixels{background-image:linear-gradient(45deg,rgba(127,127,140,.1) 25%,transparent 25%,transparent 75%,rgba(127,127,140,.1) 75%),linear-gradient(45deg,rgba(127,127,140,.1) 25%,transparent 25%,transparent 75%,rgba(127,127,140,.1) 75%);background-size:24px 24px;background-position:0 0,12px 12px}
+.wp-ciel{background-image:radial-gradient(2px 2px at 20% 30%,var(--jr),transparent),radial-gradient(2.5px 2.5px at 70% 20%,var(--jl),transparent),radial-gradient(1.5px 1.5px at 40% 70%,var(--muted),transparent),radial-gradient(2px 2px at 85% 80%,var(--jr),transparent),radial-gradient(1.5px 1.5px at 10% 85%,var(--jl),transparent),radial-gradient(1.5px 1.5px at 55% 45%,var(--muted),transparent);background-size:200px 200px}
+.wp-vagues{background-image:repeating-radial-gradient(circle at 0 100%,transparent 0 22px,rgba(0,150,220,.1) 22px 27px)}
+.wpprev{border:2px solid var(--line);border-radius:14px;padding:0;overflow:hidden;background-color:var(--bg);text-align:left;position:relative}
+.wpprev .sw2{display:block;height:70px}
+.wpprev b{display:block;font:600 .85rem var(--display);padding:6px 10px 0;background:var(--surface)}
+.wpprev small{display:block;font-size:.72rem;color:var(--muted);padding:0 10px 8px;background:var(--surface)}
+.wpprev.sel{border:3px solid var(--jr)}
+.wpprev.lock{opacity:.45}
+/* ---------- Route, coffre, saison ---------- */
+.route{display:flex;flex-direction:column;gap:8px}
+.step{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.step .n{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:600 1rem var(--display);background:var(--surface2);border:2px solid var(--line);flex:0 0 auto}
+.step.done .n{background:var(--jr);border-color:var(--jr);color:#fff}
+.step.next{border:2px solid var(--jl)}
+.step .tx{flex:1;min-width:0}
+.step small{display:block;color:var(--muted);font-size:.8rem}
+.chest{display:inline-flex;align-items:center;gap:10px;margin-top:12px;background:var(--surface);border:2px solid var(--warn);border-radius:16px;padding:10px 18px;font:600 1.2rem var(--display)}
+.chest span{font-size:34px;animation:pop .6s .2s both}
+@keyframes pop{0%{transform:scale(.3) rotate(-20deg)}70%{transform:scale(1.25) rotate(8deg)}100%{transform:none}}
+.season{display:flex;align-items:center;gap:10px;margin:8px 0 0;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:.88rem}
+.season b{font:600 .95rem var(--display)}
+.medal{font-size:64px;line-height:1;margin:6px 0}
+
+/* ---------- Compagnon ---------- */
+.stage{position:relative;border-radius:20px;background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--line);height:210px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;font-size:110px;padding-bottom:18px}
+.stage .deco{position:absolute;right:12px;top:10px;font-size:.45em;opacity:.9}
+.pet{position:relative;background:none;border:0;padding:0;font-size:1em;line-height:1;cursor:pointer}
+.pet .body{display:block}
+.pet .hat{position:absolute;top:-.42em;left:50%;transform:translateX(-50%);font-size:.5em}
+.pet .obj{position:absolute;right:-.4em;bottom:0;font-size:.42em}
+.pet.hop{animation:hop .45s ease}
+@keyframes hop{40%{transform:translateY(-18px) scale(1.06)}}
+.bubble{position:relative;margin:14px auto 4px;max-width:420px;background:var(--surface);border:2px solid var(--jr);border-radius:16px;padding:10px 14px;text-align:center;font-weight:500}
+.bubble:before{content:"";position:absolute;top:-9px;left:50%;margin-left:-8px;border:8px solid transparent;border-top:0;border-bottom-color:var(--jr)}
+.homepet{display:flex;align-items:center;gap:12px;margin-top:8px}
+.homepet .stage{height:86px;width:86px;flex:0 0 auto;padding-bottom:10px;border-radius:16px}
+.homepet .stage .deco{display:none}
+.homepet .bubble{margin:0;flex:1;text-align:left;max-width:none}
+.homepet .bubble:before{top:50%;left:-9px;margin:-8px 0 0;border:8px solid transparent;border-left:0;border-right-color:var(--jr)}
+
+/* ---------- Focus ---------- */
+.disc{width:210px;height:210px;border-radius:50%;margin:10px auto 6px;display:grid;place-items:center;box-shadow:0 0 0 1px var(--line);background:var(--surface2)}
+.disc span{width:150px;height:150px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font:600 2.3rem var(--display)}
+.tmrow{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.stepchk{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left}
+.stepchk .bx{width:30px;height:30px;border-radius:8px;border:2px solid var(--muted);display:grid;place-items:center;flex:0 0 auto;font-size:18px}
+.stepchk.ok{opacity:.7}
+.stepchk.ok .bx{background:var(--ok);border-color:var(--ok);color:#fff}
+.stepchk.ok span:last-child{text-decoration:line-through}
+.prog{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden;margin:8px 0}
+.prog i{display:block;height:100%;background:var(--ok)}
+.diff{font:600 .72rem var(--display);border-radius:999px;padding:2px 8px;border:1px solid var(--line);background:var(--surface2);margin-left:6px;cursor:pointer}
+.diff.d{background:var(--jl);color:#fff;border-color:var(--jl)}
+.diff.f{background:var(--ok);color:#fff;border-color:var(--ok)}
+.deal{border:2px solid var(--warn)}
+.strike{text-decoration:line-through;opacity:.6}
+.leadbtn{display:none}
+body.pictos .lead{display:none}
+body.pictos .leadbtn{display:inline-flex;margin:12px 0 4px}
+body.pictos .need .e{font-size:50px}
+body.pictos .mission .ic{font-size:38px}
+body.pictos .skill .e{font-size:34px}
+body.pictos .chip{font-size:1rem;padding:10px 16px}
+body.calm .tile .bdg,body.calm .homepet,body.calm .burst,body.calm .season{display:none}
+body.calm .tile .art{filter:saturate(.5)}
+body.calm .grip{filter:saturate(.45)}
+body.calm .tile.on{animation:none}
+.flag{color:var(--jl);font-weight:600}
+
+body.nomotion *,body.nomotion *:before,body.nomotion *:after{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="grip l" aria-hidden="true"><div class="mini"></div><div class="stick"></div><div class="pad"><span>▲</span><span>▶</span><span>▼</span><span>◀</span></div><div class="sq"></div></div>
+  <main class="screen" id="screen"></main>
+  <div class="grip r" aria-hidden="true"><div class="mini"></div><div class="pad"><span>X</span><span>A</span><span>B</span><span>Y</span></div><div class="stick"></div><div class="home-btn"></div></div>
+</div>
+<div id="modal"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+var KEY = "boost_pap_v1";
+
+/* =================== Données =================== */
+var NEEDS = [
+  {id:"temps", e:"⏳", t:"Plus de temps", m:"J’ai besoin d’un peu plus de temps pour finir."},
+  {id:"relire", e:"🔁", t:"Qu’on me relise la consigne", m:"Peux-tu me relire la consigne, s’il te plaît ?"},
+  {id:"decouper", e:"🪜", t:"La consigne en petites étapes", m:"J’ai besoin que la consigne soit découpée en étapes."},
+  {id:"exemple", e:"💡", t:"Un exemple", m:"Est-ce que je peux avoir un exemple ?"},
+  {id:"verifier", e:"👀", t:"Vérifier que j’ai compris", m:"Peux-tu vérifier que j’ai bien compris avant que je commence ?"},
+  {id:"agrandir", e:"🔍", t:"Un texte plus grand", m:"J’ai besoin d’un document agrandi ou plus aéré."},
+  {id:"outil", e:"🧰", t:"Ma fiche outil", m:"Est-ce que je peux utiliser ma fiche outil ?"},
+  {id:"calcul", e:"🧮", t:"La calculatrice", m:"J’ai besoin de ma calculatrice."},
+  {id:"oral", e:"🎤", t:"Répondre à l’oral", m:"Est-ce que je peux te répondre à l’oral plutôt qu’à l’écrit ?"},
+  {id:"moins", e:"✂️", t:"Moins d’exercices", m:"Est-ce que je peux faire seulement une partie des exercices ?"},
+  {id:"pause", e:"🌿", t:"Une petite pause", m:"J’ai besoin d’une courte pause pour me reconcentrer."},
+  {id:"place", e:"🪑", t:"Changer de place", m:"J’ai besoin de changer de place pour mieux me concentrer."},
+  {id:"calme", e:"🎧", t:"Du calme", m:"Il y a trop de bruit pour moi, j’ai besoin de calme."},
+  {id:"bouger", e:"🤸", t:"Bouger un peu", m:"J’ai besoin de bouger un peu pour me reconcentrer. Est-ce que je peux ?"},
+  {id:"parler", e:"💬", t:"Te parler après le cours", m:"J’aimerais te parler quelques minutes après le cours."}
+];
+var SKILLS = [
+  {id:"consigne", e:"📋", t:"Comprendre une consigne"},
+  {id:"organiser", e:"🎒", t:"M’organiser"},
+  {id:"concentrer", e:"🎯", t:"Me concentrer"},
+  {id:"lire", e:"📖", t:"Lire un texte"},
+  {id:"ecrire", e:"✏️", t:"Écrire"},
+  {id:"parler", e:"🗣️", t:"Parler devant les autres"},
+  {id:"aide", e:"🙋", t:"Demander de l’aide"},
+  {id:"stress", e:"🫧", t:"Gérer mon stress"},
+  {id:"memoriser", e:"🧠", t:"Mémoriser une leçon"}
+];
+var RATES = ["", "C’est difficile pour moi", "Je commence à y arriver", "Ça va bien", "Je gère !"];
+var RATE_E = ["", "🌱", "🌿", "🌳", "🏔️"];
+var SUGG = [
+  {e:"🙋", t:"J’ai demandé de l’aide quand j’étais bloqué·e"},
+  {e:"📝", t:"J’ai noté mes devoirs dans mon agenda"},
+  {e:"✅", t:"J’ai fini un exercice en entier"},
+  {e:"🧰", t:"J’ai utilisé mon outil (fiche, calculatrice…)"},
+  {e:"🔎", t:"J’ai relu mon travail avant de le rendre"},
+  {e:"🗣️", t:"J’ai participé à l’oral une fois"},
+  {e:"🎒", t:"J’ai préparé mon sac la veille"},
+  {e:"🌿", t:"J’ai fait une pause quand j’en avais besoin"},
+  {e:"📖", t:"J’ai relu ma leçon 10 minutes"},
+  {e:"🧘", t:"J’ai respiré calmement avant une évaluation"}
+];
+var WIN_PROMPTS = ["Aujourd’hui, j’ai osé…", "J’ai réussi à…", "Je suis fier·e de…", "C’était difficile mais…", "Mon prof m’a dit…"];
+var MOODS = [
+  {id:"soleil", e:"☀️", t:"Grand soleil"},
+  {id:"nuage", e:"⛅", t:"Quelques nuages"},
+  {id:"pluie", e:"🌧️", t:"Il pleut un peu"},
+  {id:"orage", e:"⛈️", t:"Orage dans ma tête"}
+];
+var MAXL = 20;
+var THEMES = [
+  {id:"neon", n:"Néon", l:"#ff4554", r:"#00c3e3", lv:1},
+  {id:"menthe", n:"Menthe & corail", l:"#ff7a59", r:"#14b88f", lv:2},
+  {id:"pop", n:"Violet & jaune", l:"#8b5cf6", r:"#e0a800", lv:6},
+  {id:"ocean", n:"Océan", l:"#2563eb", r:"#0eb5d6", lv:10},
+  {id:"foret", n:"Forêt", l:"#2d9b4e", r:"#8fb82f", lv:13},
+  {id:"lave", n:"Lave", l:"#e5383b", r:"#f77f00", lv:14},
+  {id:"galaxie", n:"Nébuleuse", l:"#7c3aed", r:"#ec4899", lv:18},
+  {id:"or", n:"Or légendaire", l:"#c99700", r:"#8a6d1d", lv:20}
+];
+var AVATARS = [
+  {e:"🦊",lv:1},{e:"🐼",lv:1},{e:"🐸",lv:1},{e:"🐱",lv:1},{e:"🐶",lv:1},{e:"🐯",lv:1},{e:"🐙",lv:1},{e:"🦉",lv:1},
+  {e:"🦄",lv:3},{e:"🐲",lv:7},{e:"👾",lv:10},{e:"🦖",lv:11},{e:"🤖",lv:15},{e:"🦸",lv:15},{e:"🧙",lv:19},{e:"👑",lv:20}
+];
+var FRAMES = [
+  {id:"none", n:"Simple", lv:1}, {id:"etoiles", n:"Étoiles", lv:4}, {id:"feu", n:"Feu", lv:8},
+  {id:"arc", n:"Arc-en-ciel", lv:12}, {id:"or", n:"Or", lv:16}
+];
+var WALLS = [
+  {id:"none", n:"Uni", lv:1}, {id:"nuages", n:"Nuages", lv:5}, {id:"pixels", n:"Pixels", lv:9},
+  {id:"ciel", n:"Ciel étoilé", lv:13}, {id:"vagues", n:"Vagues", lv:17}
+];
+var LEVEL_NAMES = ["", "Apprenti·e","Apprenti·e","Explorateur·rice","Explorateur·rice","Aventurier·e","Aventurier·e","Stratège","Stratège",
+  "Champion·ne","Champion·ne","Expert·e","Expert·e","Maître du jeu","Maître du jeu","Héros·ïne","Héros·ïne","Légende","Légende","Légende vivante","Boss final"];
+var SHOP = [
+  {id:"gel", cat:"power", e:"🧊", n:"Gel de série", d:"Protège ta série si tu manques un jour de classe. Il s’utilise tout seul.", c:30, lv:1},
+  {id:"dbl", cat:"power", e:"⚡", n:"Double XP du jour", d:"Tous tes XP comptent double jusqu’à ce soir.", c:50, lv:1},
+  {id:"h-noeud", cat:"hat", e:"🎀", n:"Nœud", c:40, lv:1},
+  {id:"h-casq", cat:"hat", e:"🧢", n:"Casquette", c:40, lv:1},
+  {id:"h-paille", cat:"hat", e:"👒", n:"Chapeau de paille", c:60, lv:1},
+  {id:"h-haut", cat:"hat", e:"🎩", n:"Haut-de-forme", c:80, lv:3},
+  {id:"h-toque", cat:"hat", e:"🎓", n:"Toque de diplômé·e", c:100, lv:6},
+  {id:"h-couronne", cat:"hat", e:"👑", n:"Couronne", c:250, lv:15},
+  {id:"o-ballon", cat:"obj", e:"🎈", n:"Ballon", c:30, lv:1},
+  {id:"o-foot", cat:"obj", e:"⚽", n:"Ballon de foot", c:40, lv:1},
+  {id:"o-livre", cat:"obj", e:"📚", n:"Pile de livres", c:50, lv:1},
+  {id:"o-skate", cat:"obj", e:"🛹", n:"Skate", c:70, lv:4},
+  {id:"o-guitare", cat:"obj", e:"🎸", n:"Guitare", c:80, lv:5},
+  {id:"o-baguette", cat:"obj", e:"🪄", n:"Baguette magique", c:120, lv:10},
+  {id:"o-coupe", cat:"obj", e:"🏆", n:"Coupe des champions", c:200, lv:12},
+  {id:"d-plage", cat:"deco", e:"🏝️", n:"Plage", c:60, lv:1, bg:"linear-gradient(180deg,#7dd3fc 0%,#bae6fd 55%,#fde68a 56%,#fcd34d 100%)"},
+  {id:"d-foret", cat:"deco", e:"🌲", n:"Forêt", c:60, lv:1, bg:"linear-gradient(180deg,#a7f3d0 0%,#6ee7b7 60%,#15803d 61%,#166534 100%)"},
+  {id:"d-montagne", cat:"deco", e:"🏔️", n:"Montagne", c:80, lv:2, bg:"linear-gradient(180deg,#c7d2fe 0%,#e0e7ff 60%,#94a3b8 61%,#64748b 100%)"},
+  {id:"d-espace", cat:"deco", e:"🪐", n:"Espace", c:120, lv:6, bg:"radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 65%,#fff,transparent),radial-gradient(2px 2px at 85% 75%,#fff,transparent),linear-gradient(160deg,#1e1b4b,#4c1d95)"},
+  {id:"d-chateau", cat:"deco", e:"🏰", n:"Château", c:150, lv:8, bg:"linear-gradient(180deg,#fbcfe8 0%,#f5d0fe 60%,#a78bfa 61%,#7c3aed 100%)"},
+  {id:"d-volcan", cat:"deco", e:"🌋", n:"Volcan", c:150, lv:11, bg:"linear-gradient(180deg,#fecaca 0%,#fdba74 55%,#7c2d12 56%,#431407 100%)"}
+];
+var SHOP_CATS = [
+  {id:"power", t:"Pouvoirs"}, {id:"hat", t:"Chapeaux"}, {id:"obj", t:"Objets"}, {id:"deco", t:"Décors"}
+];
+var SPECIES = [
+  {id:"oiseau", n:"Oiseau", st:["🥚","🐣","🐥","🦅"]},
+  {id:"dragon", n:"Dragon", st:["🥚","🦎","🐲","🐉"]},
+  {id:"marin", n:"Créature marine", st:["🥚","🐟","🐬","🐳"]},
+  {id:"plante", n:"Plante magique", st:["🌰","🌱","🌿","🌳"]}
+];
+var STAGE_LV = [1, 3, 8, 14];
+var DIFF = {f:{n:"Facile", xp:6, g:3}, n:{n:"Normal", xp:10, g:5}, d:{n:"Défi", xp:15, g:8}};
+var TASK_TYPES = [
+  {id:"exo", e:"✏️", t:"Un exercice", s:["Je lis la consigne et je souligne ce qu’on me demande","Je fais seulement la première question","Je continue, une question à la fois, jusqu’au bout"]},
+  {id:"lecture", e:"📖", t:"Une lecture", s:["Je lis le titre et je regarde les images","Je lis le premier paragraphe","Je lis la suite et je note un mot important par paragraphe"]},
+  {id:"redac", e:"📝", t:"Une rédaction", s:["J’écris trois idées en mots-clés","J’écris ma première phrase","Je développe une idée à la fois, puis je relis"]},
+  {id:"lecon", e:"🧠", t:"Apprendre une leçon", s:["Je lis la leçon une fois en entier","Je cache la leçon et je redis les mots-clés","Je me pose 3 questions et j’y réponds sans regarder"]},
+  {id:"ranger", e:"🎒", t:"M’organiser", s:["Je sors tout ce qu’il y a dans mon sac","Je range ou je jette ce qui ne sert pas aujourd’hui","Je prépare ce qu’il faut pour le prochain cours"]}
+];
+var GENERIC_STEPS = ["Je prépare ce dont j’ai besoin","Je fais la première petite partie","Je continue jusqu’au bout"];
+var ROUTINES = [
+  {id:"debut", e:"🔔", t:"Début de cours", items:["Je sors mes affaires","J’écris la date et le titre","Je lis l’objectif de la séance"]},
+  {id:"fin", e:"🏁", t:"Fin de cours", items:["Je note les devoirs dans mon agenda","Je range mes affaires calmement","Je vérifie que je n’oublie rien"]},
+  {id:"sac", e:"🎒", t:"Mon sac pour demain", items:["Je regarde mon emploi du temps","Je mets les cahiers et les livres du jour","Agenda, trousse, carnet : c’est bon"]}
+];
+var MOVES = [
+  "Serre fort tes poings 5 secondes, puis relâche. Trois fois.",
+  "Pousse tes paumes l’une contre l’autre pendant 5 secondes.",
+  "Roule tes épaules lentement vers l’arrière, cinq fois.",
+  "Appuie tes pieds bien à plat sur le sol, puis relâche.",
+  "Étire tes doigts en grand, puis ferme doucement les mains.",
+  "Inspire par le nez en comptant jusqu’à 4, souffle en comptant jusqu’à 6."
+];
+var WIN_WHAT = [
+  {e:"🎯", t:"J’ai fini un travail"}, {e:"🙋", t:"J’ai osé participer"}, {e:"🤝", t:"J’ai aidé quelqu’un"},
+  {e:"📈", t:"J’ai progressé"}, {e:"🧘", t:"Je suis resté·e calme"}, {e:"💡", t:"J’ai compris quelque chose"}
+];
+var WIN_SUBJ = ["Français","Maths","Anglais","Histoire-géo","SVT","Physique-chimie","Techno","Arts plastiques","Musique","EPS","Autre langue","Vie de classe"];
+var WIN_FEEL = [{e:"😊", t:"fier·e"}, {e:"😌", t:"soulagé·e"}, {e:"🤩", t:"content·e"}, {e:"💪", t:"plus fort·e"}];
+var GOAL_WHEN = ["Cette semaine", "Ce mois-ci", "Avant les vacances"];
+var PHRASES = [
+  "Tu as trouvé une bonne stratégie, garde-la !",
+  "Ce n’est pas la vitesse qui compte, c’est d’avancer.",
+  "Découper en petites étapes, c’est malin.",
+  "Ton effort d’aujourd’hui, c’est ta réussite de demain.",
+  "Chaque petit pas compte. Tu avances !",
+  "Se tromper, c’est apprendre. On continue ?",
+  "Je suis fier·e de toi, tu sais.",
+  "Demander de l’aide, c’est un super-pouvoir.",
+  "Une chose à la fois. Tu vas y arriver.",
+  "Respire un bon coup. Tu gères.",
+  "Hier tu ne savais pas, aujourd’hui un peu plus !",
+  "Tu as le droit d’avoir besoin de temps.",
+  "Ton cerveau grandit à chaque effort.",
+  "On fait équipe, toi et moi !"
+];
+function item(id){ for(var i=0;i<SHOP.length;i++){ if(SHOP[i].id===id) return SHOP[i]; } return null; }
+function chestAt(L){ return (5 + L) * (L % 5 === 0 ? 2 : 1); }
+function unlocksAt(L){
+  var u = [];
+  THEMES.forEach(function(t){ if(t.lv===L) u.push("🎮 Console « "+t.n+" »"); });
+  AVATARS.forEach(function(a){ if(a.lv===L) u.push(a.e+" Avatar"); });
+  FRAMES.forEach(function(f){ if(f.lv===L) u.push("⭕ Cadre « "+f.n+" »"); });
+  WALLS.forEach(function(w){ if(w.lv===L) u.push("🖼️ Fond « "+w.n+" »"); });
+  return u;
+}
+function medal(lv){
+  if(lv >= 20) return {e:"💠", n:"Médaille diamant"};
+  if(lv >= 15) return {e:"🥇", n:"Médaille d’or"};
+  if(lv >= 10) return {e:"🥈", n:"Médaille d’argent"};
+  if(lv >= 5) return {e:"🥉", n:"Médaille de bronze"};
+  return {e:"🎖️", n:"Médaille de participation"};
+}
+var TILES = [
+  {id:"missions", t:"Mes missions", e:"🎯", c1:"#ff5a5f", c2:"#ff9a3d"},
+  {id:"besoins", t:"J’ai besoin de…", e:"🙋", c1:"#00a7d6", c2:"#3fd0c9"},
+  {id:"focus", t:"Focus", e:"⏱️", c1:"#334155", c2:"#64748b"},
+  {id:"progres", t:"Mes progrès", e:"📈", c1:"#6c5ce7", c2:"#a66cff"},
+  {id:"victoires", t:"Mes victoires", e:"⭐", c1:"#f2a900", c2:"#ff7a00"},
+  {id:"compagnon", t:"Mon compagnon", e:"🐣", c1:"#0ea5a4", c2:"#5eead4"},
+  {id:"bonus", t:"Boutique", e:"💎", c1:"#14b88f", c2:"#2fd36f"},
+  {id:"trophees", t:"Trophées", e:"🏆", c1:"#2d3a8c", c2:"#5867dd"},
+  {id:"console", t:"Ma console", e:"🎮", c1:"#e0457b", c2:"#ff7eb3"}
+];
+var ROUND = [
+  {id:"meteo", e:"🌤️", t:"Ma météo"},
+  {id:"calme", e:"🌙", t:"Mode calme"},
+  {id:"reglages", e:"⚙️", t:"Réglages"},
+  {id:"prof", e:"🔒", t:"Espace prof"},
+  {id:"joueurs", e:"👥", t:"Changer de joueur"}
+];
+var TROPHIES = [
+  {id:"f1", e:"⏱️", t:"Premier bloc", d:"Terminer un bloc de concentration", f:function(p){return p.st.f>=1;}},
+  {id:"f10", e:"🔋", t:"Concentration de pro", d:"Terminer 10 blocs de concentration", f:function(p){return p.st.f>=10;}},
+  {id:"t1", e:"🏁", t:"Je me suis lancé·e", d:"Finir une tâche avec « Je démarre »", f:function(p){return p.st.t>=1;}},
+  {id:"rt5", e:"🔁", t:"Bonnes habitudes", d:"Compléter 5 routines", f:function(p){return p.st.rt>=5;}},
+  {id:"g1", e:"🗺️", t:"Objectif atteint", d:"Réussir un grand objectif", f:function(p){return p.st.g>=1;}},
+  {id:"m1", e:"🎯", t:"Première mission", d:"Réussir une mission", f:function(p){return p.st.m>=1;}},
+  {id:"m10", e:"🚀", t:"En mission", d:"Réussir 10 missions", f:function(p){return p.st.m>=10;}},
+  {id:"m50", e:"🛰️", t:"Agent d’élite", d:"Réussir 50 missions", f:function(p){return p.st.m>=50;}},
+  {id:"n1", e:"🙋", t:"J’ose demander", d:"Dire un besoin pour la première fois", f:function(p){return p.st.n>=1;}},
+  {id:"n10", e:"📣", t:"Je sais ce qu’il me faut", d:"Dire 10 besoins", f:function(p){return p.st.n>=10;}},
+  {id:"w1", e:"⭐", t:"Première victoire", d:"Noter une victoire", f:function(p){return p.st.w>=1;}},
+  {id:"w10", e:"🌟", t:"Collection de victoires", d:"Noter 10 victoires", f:function(p){return p.st.w>=10;}},
+  {id:"s3", e:"🔥", t:"Trois jours de suite", d:"Revenir 3 jours d’affilée", f:function(p){return p.st.ms>=3;}},
+  {id:"s7", e:"☄️", t:"Une semaine en feu", d:"Revenir 7 jours d’affilée", f:function(p){return p.st.ms>=7;}},
+  {id:"up1", e:"📈", t:"Ça monte !", d:"Progresser dans une compétence", f:function(p){return p.st.up>=1;}},
+  {id:"up5", e:"🧗", t:"Grimpeur·se", d:"Progresser 5 fois", f:function(p){return p.st.up>=5;}},
+  {id:"all", e:"🧭", t:"Je me connais", d:"Évaluer toutes mes compétences", f:function(p){return Object.keys(p.ratings).length>=SKILLS.length;}},
+  {id:"b1", e:"🛍️", t:"Premier achat", d:"Acheter un objet en boutique", f:function(p){return p.st.r>=1;}},
+  {id:"l5", e:"🚩", t:"Niveau 5", d:"Atteindre le niveau 5", f:function(p){return p.best>=5;}},
+  {id:"l10", e:"🗻", t:"Niveau 10", d:"Atteindre le niveau 10", f:function(p){return p.best>=10;}},
+  {id:"l15", e:"🌋", t:"Niveau 15", d:"Atteindre le niveau 15", f:function(p){return p.best>=15;}},
+  {id:"l20", e:"👑", t:"Boss final", d:"Atteindre le niveau 20", f:function(p){return p.best>=20;}},
+  {id:"sea1", e:"🗓️", t:"Vétéran·e", d:"Terminer une saison", f:function(p){return p.seasons.length>=1;}},
+  {id:"sea10", e:"🏅", t:"Saison réussie", d:"Finir une saison au niveau 10 ou plus", f:function(p){ for(var i=0;i<p.seasons.length;i++){ if(p.seasons[i].lv>=10) return true; } return false; }}
+];
+function trophyCount(p){ var c = 0; TROPHIES.forEach(function(t){ if(p.trophies.indexOf(t.id)>=0) c++; }); return c; }
+var MONTHS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+var DAYS = ["dim.","lun.","mar.","mer.","jeu.","ven.","sam."];
+
+/* =================== État =================== */
+var S, screen = "boot", homeIdx = 0, kbd = false, tSel = null, pinBuf = "", tUnlocked = false, newP = null, AC = null, showRoute = false, pendingSeason = null, wd = {w:-1, s:-1, f:-1}, gForm = false, gWhen = 0, TM = {run:false, end:0, left:0, dur:0, kind:"focus"}, tickH = null;
+
+function defaults(){
+  return {v:3, profiles:[], cur:null,
+    settings:{theme:"auto", size:0, spacing:false, sound:true, motion:true, tts:true, pictos:false, calm:false},
+    teacher:{pin:"1234", seasonMode:"trimestre", manualN:0}};
+}
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function load(){
+  var d = defaults();
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && o.profiles){
+        if(!o.settings) o.settings = d.settings;
+        for(var k in d.settings){ if(!(k in o.settings)) o.settings[k] = d.settings[k]; }
+        if(!o.teacher) o.teacher = d.teacher;
+        if(!o.teacher.pin) o.teacher.pin = "1234";
+        if(!o.teacher.seasonMode) o.teacher.seasonMode = "trimestre";
+        if(!o.teacher.manualN) o.teacher.manualN = 0;
+        delete o.teacher.rewards;
+        o.v = 3;
+        o.profiles.forEach(fixProfile);
+        return o;
+      }
+    }
+  }catch(e){}
+  return d;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function fixProfile(p){
+  var base = blankProfile("", "🦊", "neon");
+  for(var k in base){ if(!(k in p)) p[k] = base[k]; }
+  for(var s in base.st){ if(!(s in p.st)) p.st[s] = 0; }
+  var lv = level(p.xp); if(lv > p.best) p.best = lv;
+  if(!p.equip) p.equip = {hat:"", obj:"", deco:""};
+  if(!p.pet) p.pet = {sp:"", name:""};
+}
+function blankProfile(name, av, th){
+  return {id:"p"+Date.now()+Math.floor(Math.random()*1000), name:name, av:av, th:th, fr:"none", wp:"none", xp:0, gems:0, best:1,
+    season:"", seasonLabel:"", seasons:[], owned:[], equip:{hat:"", obj:"", deco:""}, pet:{sp:"", name:""}, freezes:0, dbl:"",
+    missions:[], ratings:{}, wins:[], needsLog:[], moods:[], redeemed:[], trophies:[], inbox:[], days:[],
+    st:{m:0,n:0,w:0,r:0,up:0,ms:0,f:0,t:0,rt:0,g:0}, daily:{d:""}, goals:[], task:null, rt:{d:"", c:{}}, created:today()};
+}
+function seasonInfo(){
+  var mode = S.teacher.seasonMode || "trimestre", d = new Date(), m = d.getMonth()+1, y = d.getFullYear(), sy = m >= 9 ? y : y-1;
+  var key, label, end = null, n = S.teacher.manualN || 0;
+  if(mode === "manuel"){ key = "M"+n; label = "Saison "+(n+1); }
+  else if(mode === "semestre"){
+    if(m >= 9 || m === 1){ key = sy+"-S1"; label = "Saison du semestre 1"; end = new Date(sy+1, 0, 31); }
+    else { key = sy+"-S2"; label = "Saison du semestre 2"; end = new Date(sy+1, 6, 4); }
+  } else {
+    if(m >= 9 && m <= 11){ key = sy+"-T1"; label = "Saison d’automne"; end = new Date(sy, 10, 30); }
+    else if(m === 12 || m <= 2){ key = sy+"-T2"; label = "Saison d’hiver"; end = new Date(sy+1, 2, 0); }
+    else { key = sy+"-T3"; label = "Saison du printemps"; end = new Date(sy+1, 6, 4); }
+  }
+  return {key:key, label:label, left: end ? Math.max(0, Math.ceil((end.getTime() + 86399000 - d.getTime())/86400000)) : null};
+}
+function checkSeason(p){
+  if(!p) return;
+  var s = seasonInfo();
+  if(!p.season){ p.season = s.key; p.seasonLabel = s.label; save(); return; }
+  if(p.season === s.key) return;
+  var old = {k:p.season, label:p.seasonLabel || "Saison précédente", lv:level(p.xp), xp:p.xp, d:today()};
+  p.seasons.push(old);
+  p.xp = 0; p.season = s.key; p.seasonLabel = s.label;
+  save();
+  pendingSeason = {old:old, label:s.label};
+  checkTrophies(p);
+}
+function showSeason(){
+  if(!pendingSeason) return;
+  var ps = pendingSeason, md = medal(ps.old.lv); pendingSeason = null;
+  beep("lvl");
+  modal(burst()+'<div class="lvl"><p class="note">Nouvelle saison</p><h2 style="margin:4px 0">'+esc(ps.label)+'</h2>'+
+    '<div class="medal">'+md.e+'</div><p><b>'+md.n+'</b><br>'+esc(ps.old.label)+' terminée au niveau '+ps.old.lv+'.</p>'+
+    '<div class="card" style="text-align:left">Ton niveau repart à 1. Tu gardes tes gemmes, tes trophées, tes avatars et tout ce que tu as débloqué. Les coffres de niveau sont de nouveau à gagner !</div>'+
+    '<p style="margin-top:18px"><button class="btn" data-a="close">C’est parti !</button></p></div>');
+}
+function cur(){ for(var i=0;i<S.profiles.length;i++){ if(S.profiles[i].id===S.cur) return S.profiles[i]; } return null; }
+function byId(id){ for(var i=0;i<S.profiles.length;i++){ if(S.profiles[i].id===id) return S.profiles[i]; } return null; }
+
+/* =================== Utilitaires =================== */
+function pad(n){ return n<10 ? "0"+n : ""+n; }
+function dstr(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function today(){ return dstr(new Date()); }
+function fdate(s){ var p = s.split("-"); return parseInt(p[2],10)+" "+MONTHS[parseInt(p[1],10)-1]; }
+function wday(s){ var p = s.split("-"); return DAYS[new Date(+p[0], +p[1]-1, +p[2]).getDay()]; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function $(id){ return document.getElementById(id); }
+function closest(el, sel){
+  while(el && el.nodeType===1){
+    if(el.matches ? el.matches(sel) : el.msMatchesSelector(sel)) return el;
+    el = el.parentNode;
+  }
+  return null;
+}
+function lvlFloor(L){ return 25*(L-1) + 3*(L-1)*(L-2); }
+function level(xp){ var L = 1; while(L < MAXL && xp >= lvlFloor(L+1)) L++; return L; }
+function lvlName(L){ return LEVEL_NAMES[Math.min(L, LEVEL_NAMES.length-1)]; }
+function theme(id){ for(var i=0;i<THEMES.length;i++){ if(THEMES[i].id===id) return THEMES[i]; } return THEMES[0]; }
+function daily(p){ if(p.daily.d !== today()){ p.daily = {d:today(), needs:0, wins:0, rated:false, mood:false, focus:0, starts:0}; } return p.daily; }
+function isSchoolDay(d){ var w = d.getDay(); return w !== 0 && w !== 6; }
+function prevSchoolDay(d){ var x = new Date(d.getTime()); do { x.setDate(x.getDate()-1); } while(!isSchoolDay(x)); return x; }
+function markDay(p){
+  var t = today();
+  if(p.days.indexOf(t) < 0){
+    var y = prevSchoolDay(new Date()), y2 = prevSchoolDay(y);
+    if(p.days.indexOf(dstr(y)) < 0 && p.days.indexOf(dstr(y2)) >= 0 && p.freezes > 0){
+      p.days.push(dstr(y)); p.freezes--;
+      setTimeout(function(){ toast("🧊 Ton gel a protégé ta série !"); }, 1200);
+    }
+    p.days.push(t); if(p.days.length > 400) p.days.shift();
+  }
+  var s = streak(p); if(s > p.st.ms) p.st.ms = s;
+}
+function streak(p){
+  var d = new Date(), c = 0;
+  if(p.days.indexOf(dstr(d)) >= 0) c++;
+  d = prevSchoolDay(d);
+  while(p.days.indexOf(dstr(d)) >= 0){ c++; d = prevSchoolDay(d); }
+  return c;
+}
+
+/* =================== Sons & voix =================== */
+function beep(type){
+  if(!S.settings.sound || S.settings.calm) return;
+  try{
+    if(!AC){ var C = window.AudioContext || window.webkitAudioContext; if(!C) return; AC = new C(); }
+    var seqs = {click:[[880,.04]], sel:[[620,.03]], back:[[420,.05]], ok:[[660,.07],[880,.07],[1320,.12]],
+      lvl:[[523,.1],[659,.1],[784,.1],[1047,.3]], boot:[[392,.06],[784,.12]], err:[[220,.12]]};
+    var seq = seqs[type] || seqs.click, t = AC.currentTime;
+    for(var i=0;i<seq.length;i++){
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = "square"; o.frequency.value = seq[i][0];
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.06, t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+seq[i][1]);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+seq[i][1]+0.02);
+      t += seq[i][1]*0.9;
+    }
+  }catch(e){}
+}
+function speak(txt){
+  try{
+    if(!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(txt); u.lang = "fr-FR"; u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function sayBtn(txt){
+  if(!S.settings.tts) return "";
+  return '<button class="icon-btn" data-a="say" data-v="'+esc(txt)+'" aria-label="Écouter">🔊</button>';
+}
+
+/* =================== Toasts & modales =================== */
+function toast(msg, gold){
+  var el = document.createElement("div");
+  el.className = "toast" + (gold ? " gold" : "");
+  el.textContent = msg;
+  $("toasts").appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 2600);
+}
+function modal(html){
+  $("modal").innerHTML = '<div class="modal" data-a="bg"><div class="box" role="dialog" aria-modal="true">'+
+    '<button class="icon-btn close" data-a="close" aria-label="Fermer">✕</button>'+html+'</div></div>';
+  var b = $("modal").querySelector(".box button:not(.close), .box input, .box textarea");
+  if(b && kbd) b.focus();
+}
+function closeModal(){ $("modal").innerHTML = ""; }
+function burst(){
+  var s = "", em = ["⭐","💎","✨","🎉","🌟"];
+  for(var i=0;i<16;i++){
+    var a = Math.random()*Math.PI*2, r = 120+Math.random()*120;
+    s += '<i style="--x:'+Math.round(Math.cos(a)*r)+'px;--y:'+Math.round(Math.sin(a)*r)+'px;animation-delay:'+(Math.random()*.2).toFixed(2)+'s">'+em[i%em.length]+'</i>';
+  }
+  return '<div class="burst" aria-hidden="true">'+s+'</div>';
+}
+
+/* =================== Gains =================== */
+function gain(p, xp, gems, label){
+  var before = level(p.xp);
+  if(xp > 0 && p.dbl === today()){ xp *= 2; label = "⚡ " + (label || ""); }
+  p.xp += xp; p.gems += gems;
+  markDay(p);
+  var parts = [];
+  if(xp) parts.push("+"+xp+" XP");
+  if(gems) parts.push("+"+gems+" 💎");
+  if(parts.length) toast((label ? label+"  " : "")+parts.join("  "), true);
+  var info = applyLevels(p, before);
+  save();
+  if(info){ setTimeout(function(){ levelUp(info); }, 450); }
+  checkTrophies(p);
+}
+function applyLevels(p, before){
+  var after = level(p.xp);
+  if(after <= before) return null;
+  var chest = 0, unl = [], ob = p.best, items = [];
+  SHOP.forEach(function(it){ if(it.lv > ob && it.lv <= after) items.push(it); });
+  for(var L = before+1; L <= after; L++){
+    chest += chestAt(L);
+    if(L > p.best) unl = unl.concat(unlocksAt(L));
+  }
+  p.gems += chest;
+  if(after > p.best) p.best = after;
+  return {from:before, to:after, chest:chest, unl:unl, items:items};
+}
+function checkTrophies(p){
+  var news = [];
+  TROPHIES.forEach(function(t){
+    if(p.trophies.indexOf(t.id) < 0 && t.f(p)){ p.trophies.push(t.id); news.push(t); }
+  });
+  if(news.length){
+    save();
+    news.forEach(function(t, i){ setTimeout(function(){ beep("ok"); toast("🏆 Trophée débloqué : "+t.t); }, 900 + i*700); });
+  }
+}
+function levelUp(info){
+  beep("lvl");
+  var L = info.to, unl = info.unl, rares = info.items || [];
+  var msg = L >= MAXL ? "Niveau maximum de la saison. Tu es le boss !" : (info.to - info.from > 1 ? "Tu as franchi "+(info.to-info.from)+" niveaux d’un coup !" : "Tes efforts paient. Continue comme ça !");
+  modal(burst()+'<div class="lvl"><p class="note">Niveau supérieur</p><div class="num">'+L+'</div>'+
+    '<h2 style="margin:8px 0 4px">'+esc(lvlName(L))+'</h2><p style="margin:0">'+msg+'</p>'+
+    '<div class="chest"><span aria-hidden="true">🎁</span>Coffre : +'+info.chest+' 💎</div>'+
+    (unl.length ? '<div class="card" style="text-align:left;margin-top:14px"><b>Nouveau dans ta collection :</b><br>'+unl.map(esc).join("<br>")+'</div>' : '')+
+    (rares.length ? '<div class="card" style="text-align:left;margin-top:10px"><b>Nouveau en boutique :</b><br>'+rares.map(function(r){ return esc(r.e+" "+r.n); }).join("<br>")+'</div>' : '')+
+    '<p style="margin-top:18px"><button class="btn" data-a="close">Super !</button>'+
+    (unl.length ? ' <button class="btn ghost" data-a="gomodal" data-v="console">Voir ma console</button>' : (rares.length ? ' <button class="btn ghost" data-a="gomodal" data-v="bonus">Voir la boutique</button>' : ''))+'</p></div>');
+}
+
+/* =================== Réglages =================== */
+function applySettings(){
+  var st = S.settings, root = document.documentElement;
+  if(st.theme === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", st.theme);
+  root.style.fontSize = [100,112,125][st.size || 0] + "%";
+  document.body.classList.toggle("spacing", !!st.spacing);
+  document.body.classList.toggle("nomotion", !st.motion || !!st.calm);
+  document.body.classList.toggle("calm", !!st.calm);
+  document.body.classList.toggle("pictos", !!st.pictos);
+  var p = cur(), th = theme(p ? p.th : "neon");
+  if(newP) th = theme(newP.th);
+  root.style.setProperty("--jl", th.l);
+  root.style.setProperty("--jr", th.r);
+}
+
+/* =================== Rendu =================== */
+function go(s){ screen = s; render(); var c = document.querySelector(".content"); if(c) c.scrollTop = 0; }
+function render(){
+  applySettings();
+  var el = $("screen"), p = cur();
+  if(screen === "boot"){ el.innerHTML = ""; renderBoot(); return; }
+  if(screen === "who" || !p && screen !== "new"){ screen = screen === "new" ? "new" : "who"; }
+  var html = "";
+  if(screen === "who") html = vWho();
+  else if(screen === "new") html = vNew();
+  else if(screen === "home") html = vHome(p);
+  else html = sub(p);
+  el.innerHTML = html;
+  el.className = "screen" + (screen === "home" && p && p.wp && p.wp !== "none" ? " wp-"+p.wp : "");
+  if(screen === "home") afterHome();
+  if(pendingSeason && screen === "home") showSeason();
+}
+function renderBoot(){
+  var b = document.createElement("button");
+  b.className = "boot"; b.setAttribute("data-a", "boot");
+  b.innerHTML = '<div class="logo"><i class="a"></i><em>Boost</em><i class="b"></i></div><p>Touche l’écran pour commencer</p>';
+  document.body.appendChild(b);
+  b.focus();
+}
+function topbar(p){
+  var L = level(p.xp), lo = lvlFloor(L), hi = lvlFloor(L+1), max = L >= MAXL, pc = max ? 100 : Math.round((p.xp-lo)/(hi-lo)*100);
+  return '<div class="topbar">'+
+    '<button class="me" data-a="go" data-v="console" aria-label="Ma console"><span class="av'+frCls(p)+'">'+p.av+'</span><span><b>'+esc(p.name)+'</b><small>Niv. '+L+' · '+esc(lvlName(L))+'</small></span></button>'+
+    '<span class="spacer"></span>'+
+    '<span class="pill" title="Mes gemmes">💎 '+p.gems+'</span>'+
+    '<span class="pill" title="Jours d’affilée">🔥 '+streak(p)+'</span>'+
+    tmPill()+'<span class="clock" id="clock">'+clockTxt()+'</span></div>'+
+    '<div class="xpwrap"><div class="xpbar" role="progressbar" aria-valuenow="'+pc+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pc+'%"></i></div>'+
+    '<div class="xptxt"><span>'+p.xp+' XP</span><span>'+(max ? "Niveau max de la saison 👑" : "Encore "+(hi-p.xp)+" XP avant le niveau "+(L+1)+" 🎁")+'</span></div></div>';
+}
+function frCls(p){ return p.fr && p.fr !== "none" ? " fr-"+p.fr : ""; }
+function clockTxt(){ var d = new Date(); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+
+function vWho(){
+  var h = '<div class="who"><h1>Qui joue ?</h1><div class="users">';
+  S.profiles.forEach(function(p){
+    h += '<button class="user" data-a="pick" data-v="'+p.id+'" style="--jr:'+theme(p.th).r+'"><span class="av'+frCls(p)+'">'+p.av+'</span><span>'+esc(p.name)+'</span><small>Niv. '+level(p.xp)+'</small></button>';
+  });
+  h += '<button class="user add" data-a="newp"><span class="av">＋</span><span>Nouveau</span><small>joueur</small></button></div>';
+  if(!S.profiles.length) h += '<p class="lead" style="margin-top:28px">Crée ton profil pour lancer ta partie : tu choisis ton avatar, ta console, et tes premières missions t’attendent.</p>';
+  h += '</div>';
+  return h;
+}
+function vNew(){
+  var h = '<div class="subhead"><button class="backbtn" data-a="towho">‹ Retour</button><h1>Nouveau joueur</h1></div><div class="content">';
+  h += '<h2>Ton prénom ou ton pseudo</h2><input class="field" id="pname" maxlength="20" autocomplete="off" value="'+esc(newP.name)+'" placeholder="Ex. Léo">';
+  h += '<h2>Ton avatar</h2><div class="lockgrid">';
+  AVATARS.forEach(function(a){ if(a.lv===1) h += '<button class="pick'+(newP.av===a.e?' sel':'')+'" data-a="npav" data-v="'+a.e+'">'+a.e+'</button>'; });
+  h += '</div><p class="note">D’autres avatars se débloquent en montant de niveau.</p>';
+  h += '<p style="margin-top:22px"><button class="btn" data-a="create">Créer mon profil</button></p></div>';
+  return h;
+}
+
+function vHome(p){
+  var d = daily(p), todo = 0;
+  p.missions.forEach(function(m){ if(m.last !== today()) todo++; });
+  var badges = {focus: TM.dur ? "⏱️ en cours" : "", compagnon: petName(p), missions: todo ? todo+" à faire" : "✓ fini", bonus: p.gems+" 💎", trophees: trophyCount(p)+"/"+TROPHIES.length, progres: Object.keys(p.ratings).length+"/"+SKILLS.length, victoires: p.wins.length ? p.wins.length+"" : "", besoins:"", console:"Niv. "+level(p.xp)+"/"+MAXL};
+  var si = seasonInfo();
+  var h = topbar(p) + '<div class="content">';
+  if(petSpecies(p)) h += '<div class="homepet">'+petHTML(p, 46)+'<div class="bubble">'+esc(petLine(p))+'</div></div>';
+  h += '<div class="season"><span aria-hidden="true">🗓️</span><span><b>'+esc(si.label)+'</b>'+(si.left !== null ? ', encore '+si.left+' jour'+(si.left>1?'s':'') : '')+'</span></div>';
+  if(p.inbox.length){
+    h += '<button class="inbox" data-a="inbox">📩 <span>Tu as '+(p.inbox.length>1 ? p.inbox.length+" messages" : "un message")+' de ton prof !</span></button>';
+  }
+  h += '<div class="tile-title" id="ttitle" aria-live="polite">'+esc(TILES[homeIdx].t)+'</div><div class="tiles" id="tiles">';
+  TILES.forEach(function(t, i){
+    h += '<button class="tile" data-a="go" data-v="'+t.id+'" data-i="'+i+'" style="--t1:'+t.c1+';--t2:'+t.c2+'" aria-label="'+esc(t.t)+'">'+
+      '<span class="art" aria-hidden="true">'+t.e+'</span><span class="nm">'+esc(t.t)+'</span>'+
+      (badges[t.id] ? '<span class="bdg">'+badges[t.id]+'</span>' : '')+'</button>';
+  });
+  h += '</div><div class="rbtns" id="rbtns">';
+  ROUND.forEach(function(r, i){
+    var lbl = r.id === "calme" ? (S.settings.calm ? "Mode calme : oui" : "Mode calme") : r.t;
+    h += '<button class="rbtn'+(r.id==="calme" && S.settings.calm ? ' on' : '')+'" data-a="go" data-v="'+r.id+'" data-r="'+i+'"><span class="c" aria-hidden="true">'+r.e+'</span><span>'+lbl+'</span></button>';
+  });
+  h += '</div><h2>Aujourd’hui</h2><div class="today">'+
+    '<div><b>'+(p.missions.length - todo)+' / '+p.missions.length+'</b><span>missions réussies</span></div>'+
+    '<div><b>'+(d.needs||0)+'</b><span>besoin(s) exprimé(s)</span></div>'+
+    '<div><b>'+moodIcon(p)+'</b><span>ma météo</span></div></div>';
+  h += '</div><div class="hints"><span><b>A</b>Ouvrir</span><span><b>B</b>Retour</span><span>◀ ▶ ▲ ▼ Se déplacer</span></div>';
+  return h;
+}
+function moodIcon(p){
+  for(var i=p.moods.length-1;i>=0;i--){ if(p.moods[i].d===today()){ for(var j=0;j<MOODS.length;j++){ if(MOODS[j].id===p.moods[i].m) return MOODS[j].e; } } }
+  return "–";
+}
+function afterHome(){
+  var tiles = document.querySelectorAll(".tile");
+  if(tiles[homeIdx]){ tiles[homeIdx].classList.add("on"); if(kbd) tiles[homeIdx].focus(); }
+}
+function setTile(i, focus){
+  var tiles = document.querySelectorAll(".tile");
+  if(!tiles.length) return;
+  i = (i + tiles.length) % tiles.length;
+  for(var k=0;k<tiles.length;k++) tiles[k].classList.remove("on");
+  homeIdx = i; tiles[i].classList.add("on");
+  $("ttitle").textContent = TILES[i].t;
+  if(focus){ tiles[i].focus(); }
+  if(tiles[i].scrollIntoView) tiles[i].scrollIntoView({block:"nearest", inline:"nearest"});
+}
+
+function sub(p){
+  var titles = {missions:"Mes missions", besoins:"J’ai besoin de…", progres:"Mes progrès", victoires:"Mes victoires", bonus:"Boutique", compagnon:"Mon compagnon", focus:"Focus",
+    trophees:"Trophées", console:"Ma console", meteo:"Ma météo", reglages:"Réglages", prof:"Espace prof"};
+  var body = {missions:vMissions, besoins:vNeeds, progres:vProgress, victoires:vWins, bonus:vShop, compagnon:vPet, focus:vFocus, trophees:vTrophies,
+    console:vConsole, meteo:vMood, reglages:vSettings, prof:vTeacher}[screen];
+  if(!body){ screen = "home"; return vHome(p); }
+  var inner = body(p), hasLead = inner.indexOf('class="lead"') >= 0 && screen !== "prof";
+  return '<div class="subhead"><button class="backbtn" data-a="home">‹ Accueil</button><h1>'+titles[screen]+'</h1>'+
+    (hasLead && S.settings.tts ? '<button class="icon-btn" data-a="saylead" aria-label="Écouter les explications">🔊</button>' : '')+
+    tmPill()+'<span class="pill">💎 '+p.gems+'</span></div><div class="content">'+
+    (hasLead && S.settings.tts ? '<button class="btn ghost leadbtn" data-a="saylead">🔊 Écouter les explications</button>' : '')+inner+'</div>';
+}
+
+/* ---------- Missions ---------- */
+function vMissions(p){
+  var h = '<p class="lead">Tes missions, ce sont les petites habitudes qui te font avancer. Choisis le niveau de chaque mission : facile, normal ou défi. Plus c’est difficile, plus ça rapporte. Chaque mission compte une fois par jour.</p>';
+  h += vGoals(p) + '<h2>Mes missions du jour</h2><div class="list">';
+  if(!p.missions.length) h += '<div class="card">Tu n’as pas encore de mission. Choisis-en une ci-dessous pour démarrer.</div>';
+  p.missions.forEach(function(m){
+    var done = m.last === today();
+    h += '<div class="mission'+(done?' done':'')+'"><span class="ic">'+m.e+'</span><span class="tx"><b>'+esc(m.t)+'</b><small>Réussie '+m.count+' fois<button class="diff '+(m.lvl||"n")+'" data-a="mdiff" data-v="'+m.id+'" aria-label="Changer le niveau de la mission">'+DIFF[m.lvl||"n"].n+' · +'+DIFF[m.lvl||"n"].xp+' XP</button></small></span>'+
+      sayBtn(m.t)+
+      (done ? '<button class="btn ok" disabled>Fait ✓</button>' : '<button class="btn" data-a="mdone" data-v="'+m.id+'">J’ai réussi</button>')+
+      '<button class="icon-btn" data-a="mdel" data-v="'+m.id+'" aria-label="Retirer la mission">🗑️</button></div>';
+  });
+  h += '</div>';
+  if(p.missions.length < 6){
+    h += '<h2>Ajouter une mission</h2><div class="chips">';
+    SUGG.forEach(function(s, i){
+      var has = false; p.missions.forEach(function(m){ if(m.t===s.t) has = true; });
+      if(!has) h += '<button class="chip" data-a="madd" data-v="'+i+'">'+s.e+' '+esc(s.t)+'</button>';
+    });
+    h += '</div><h2>Ou invente la tienne</h2><div class="row"><input class="field" id="mcustom" maxlength="70" placeholder="J’ai…"><button class="btn" data-a="mcustom">Ajouter</button></div>';
+  } else {
+    h += '<p class="note">Tu as 6 missions : c’est le maximum. Retire-en une pour en ajouter une nouvelle.</p>';
+  }
+  return h;
+}
+/* ---------- Besoins ---------- */
+function vNeeds(p){
+  var h = '<p class="lead">Dire ce dont on a besoin, c’est une force. Touche une carte : elle s’affiche en grand pour la montrer à ton prof, sans avoir à parler devant toute la classe.</p><div class="grid">';
+  NEEDS.forEach(function(n, i){
+    h += '<button class="need" data-a="need" data-v="'+i+'"><span class="e" aria-hidden="true">'+n.e+'</span><b>'+esc(n.t)+'</b></button>';
+  });
+  h += '</div><h2>Écrire mon propre message</h2><textarea class="field" id="ncustom" maxlength="160" placeholder="J’aimerais…"></textarea>'+
+    '<p><button class="btn" data-a="ncustom">Afficher ma carte</button></p>';
+  var counts = needCounts(p);
+  if(counts.length){
+    h += '<h2>Mes besoins les plus fréquents</h2><div class="list">';
+    counts.slice(0,3).forEach(function(c){ h += '<div class="card row"><span style="font-size:24px">'+c.n.e+'</span><span style="flex:1">'+esc(c.n.t)+'</span><b>'+c.c+'×</b></div>'; });
+    h += '</div><p class="note">Ça t’aide à connaître ce qui marche pour toi. Tu peux en parler avec ton prof principal.</p>';
+  }
+  return h;
+}
+function needCounts(p){
+  var m = {}, out = [];
+  p.needsLog.forEach(function(l){ m[l.id] = (m[l.id]||0)+1; });
+  NEEDS.forEach(function(n){ if(m[n.id]) out.push({n:n, c:m[n.id]}); });
+  out.sort(function(a,b){ return b.c - a.c; });
+  return out;
+}
+function showNeed(n){
+  modal('<div class="bigcard"><div class="e">'+n.e+'</div><h3>'+esc(n.t)+'</h3><p>« '+esc(n.m)+' »</p><small>Montre cette carte à ton prof</small></div>'+
+    '<p style="text-align:center;margin-top:16px">'+(S.settings.tts ? '<button class="btn ghost" data-a="say" data-v="'+esc(n.m)+'">🔊 Écouter</button> ' : '')+
+    '<button class="btn" data-a="close">C’est bon</button></p>');
+}
+/* ---------- Progrès ---------- */
+function lastRate(p, id){ var r = p.ratings[id]; return r && r.length ? r[r.length-1].v : 0; }
+function vProgress(p){
+  var h = '<p class="lead">Où en es-tu ? Il n’y a pas de mauvaise réponse : c’est ta carte du monde. Reviens la mettre à jour pour voir ton chemin parcouru.</p>';
+  h += '<div class="stat3"><div><b>'+p.st.m+'</b><span>missions réussies</span></div><div><b>'+p.st.n+'</b><span>besoins exprimés</span></div><div><b>'+p.st.up+'</b><span>progrès notés</span></div></div>';
+  h += '<h2>Mes compétences</h2><div class="list">';
+  SKILLS.forEach(function(s){
+    var v = lastRate(p, s.id), bars = "";
+    for(var i=1;i<=4;i++) bars += '<i class="'+(i<=v?'f':'')+'"></i>';
+    h += '<button class="skill" data-a="rateopen" data-v="'+s.id+'"><span class="e">'+s.e+'</span><span class="tx">'+esc(s.t)+'<small>'+(v ? RATES[v] : "Pas encore évalué — touche pour te situer")+'</small></span><span class="bars" aria-hidden="true">'+bars+'</span></button>';
+  });
+  h += '</div>';
+  return h;
+}
+function chart(arr){
+  var pts = arr.slice(-12), W = 320, H = 130, px = 26, py = 16;
+  if(pts.length < 2) return '<p class="note">Ta courbe apparaîtra dès ta deuxième évaluation.</p>';
+  var step = (W - px*2) / (pts.length - 1), poly = [], dots = "", lbl = "";
+  pts.forEach(function(r, i){
+    var x = px + i*step, y = H - py - (r.v-1)/3*(H - py*2);
+    poly.push(x.toFixed(1)+","+y.toFixed(1));
+    dots += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5" fill="var(--jl)"/>';
+    if(i===0 || i===pts.length-1) lbl += '<text x="'+x.toFixed(1)+'" y="'+(H-2)+'" font-size="10" text-anchor="middle" fill="var(--muted)">'+fdate(r.d)+'</text>';
+  });
+  var grid = "";
+  for(var g=1; g<=4; g++){ var gy = H - py - (g-1)/3*(H - py*2); grid += '<line x1="'+px+'" x2="'+(W-px)+'" y1="'+gy+'" y2="'+gy+'" stroke="var(--line)" stroke-dasharray="3 4"/><text x="6" y="'+(gy+4)+'" font-size="12">'+RATE_E[g]+'</text>'; }
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Évolution de la compétence">'+grid+
+    '<polyline points="'+poly.join(" ")+'" fill="none" stroke="var(--jr)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'+dots+lbl+'</svg>';
+}
+function rateModal(p, id){
+  var s = null; SKILLS.forEach(function(k){ if(k.id===id) s = k; });
+  var v = lastRate(p, id), h = '<h2>'+s.e+' '+esc(s.t)+'</h2><p class="note" style="margin-top:0">Aujourd’hui, pour moi, c’est…</p><div class="rates">';
+  for(var i=1;i<=4;i++) h += '<button class="rate'+(i===v?' sel':'')+'" data-a="rate" data-v="'+id+'|'+i+'"><span style="font-size:30px">'+RATE_E[i]+'</span><span>'+RATES[i]+'</span></button>';
+  h += '</div><h2>Mon chemin</h2>'+chart(p.ratings[id] || []);
+  modal(h);
+}
+/* ---------- Victoires ---------- */
+function vWins(p){
+  var h = '<p class="lead">Note ce que tu as réussi, même petit. En trois touches : ce que tu as fait, où, et ce que tu ressens. Tu peux ajouter des détails si tu veux.</p>';
+  h += '<h2>1. Ce que j’ai fait</h2><div class="chips">';
+  WIN_WHAT.forEach(function(w, i){ h += '<button class="chip'+(wd.w===i?' sel':'')+'" data-a="wpick" data-v="w|'+i+'">'+w.e+' '+esc(w.t)+'</button>'; });
+  h += '</div><h2>2. Où</h2><div class="chips">';
+  WIN_SUBJ.forEach(function(w, i){ h += '<button class="chip'+(wd.s===i?' sel':'')+'" data-a="wpick" data-v="s|'+i+'">'+esc(w)+'</button>'; });
+  h += '</div><h2>3. Je me sens</h2><div class="chips">';
+  WIN_FEEL.forEach(function(w, i){ h += '<button class="chip'+(wd.f===i?' sel':'')+'" data-a="wpick" data-v="f|'+i+'">'+w.e+' '+esc(w.t)+'</button>'; });
+  h += '</div>';
+  var prev = winText("");
+  if(prev) h += '<div class="card" style="margin-top:14px"><b>Ma victoire :</b> '+esc(prev)+'</div>';
+  h += '<h2>Des détails ? (facultatif)</h2><textarea class="field" id="wtext" maxlength="240" placeholder="Raconte avec tes mots…"></textarea>'+
+    '<p class="note">Astuce : le micro de ton clavier permet de dicter au lieu d’écrire.</p>'+
+    '<p><button class="btn" data-a="wadd">Sauvegarder ma victoire</button></p>';
+  h += '<h2>Mes sauvegardes</h2><div class="list">';
+  if(!p.wins.length) h += '<div class="card">Ta première victoire t’attend. Qu’est-ce qui s’est bien passé aujourd’hui ?</div>';
+  p.wins.slice().reverse().forEach(function(w){
+    h += '<div class="save"><span class="dt">'+wday(w.d)+'<br>'+fdate(w.d)+'</span><span style="flex:1">'+esc(w.t)+'</span></div>';
+  });
+  return h + '</div>';
+}
+function winText(extra){
+  var parts = [];
+  if(wd.w >= 0) parts.push(WIN_WHAT[wd.w].e+" "+WIN_WHAT[wd.w].t+(wd.s >= 0 ? " en "+WIN_SUBJ[wd.s] : ""));
+  else if(wd.s >= 0) parts.push("En "+WIN_SUBJ[wd.s]);
+  if(wd.f >= 0) parts.push(WIN_FEEL[wd.f].e+" Je me sens "+WIN_FEEL[wd.f].t);
+  var t = parts.join(". ");
+  if(extra) t = t ? t+". "+extra : extra;
+  return t;
+}
+/* ---------- Boutique ---------- */
+function dealId(){
+  var pool = SHOP.filter(function(it){ return it.cat !== "power"; });
+  return pool[Math.floor((Date.now()/86400000 + 3)/7) % pool.length].id;
+}
+function priceOf(it){ return it.id === dealId() ? Math.round(it.c * 0.7) : it.c; }
+function vShop(p){
+  var h = '<p class="lead">Dépense tes gemmes pour habiller ton compagnon, décorer son monde ou t’offrir un pouvoir. Chaque semaine, un objet est en promotion.</p>';
+  var dl = item(dealId()), dOwned = p.owned.indexOf(dl.id) >= 0, dLock = dl.lv > p.best;
+  h += '<h2>🌟 Objet de la semaine</h2><div class="reward deal"><span class="e"'+(dl.bg && !dLock ? ' style="background:'+dl.bg+'"' : '')+'>'+(dLock ? "🔒" : dl.e)+'</span><span class="tx"><b>'+esc(dl.n)+'</b><br><small>'+
+    (dOwned ? "Déjà dans ton inventaire" : (dLock ? "🔒 Se débloque au niveau "+dl.lv : '<span class="strike">'+dl.c+' 💎</span> '+priceOf(dl)+' 💎 (−30 %)'))+'</small></span>'+
+    (dOwned || dLock ? '' : '<button class="btn" data-a="buy" data-v="'+dl.id+'"'+(p.gems >= priceOf(dl) ? '' : ' disabled')+'>Acheter</button>')+'</div>';
+  SHOP_CATS.forEach(function(cat){
+    h += '<h2>'+cat.t+'</h2><div class="list">';
+    SHOP.forEach(function(it){
+      if(it.cat !== cat.id) return;
+      var lock = it.lv > p.best, owned = p.owned.indexOf(it.id) >= 0, btn, info;
+      if(it.cat === "power"){
+        var stock = it.id === "gel" ? " · tu en as "+p.freezes+"/3" : (p.dbl === today() ? " · actif aujourd’hui" : "");
+        info = esc(it.d)+'<br>'+it.c+' 💎'+stock;
+        var can = !lock && p.gems >= it.c && !(it.id === "gel" && p.freezes >= 3) && !(it.id === "dbl" && p.dbl === today());
+        btn = '<button class="btn" data-a="buy" data-v="'+it.id+'"'+(can?'':' disabled')+'>Acheter</button>';
+      } else if(owned){
+        var on = p.equip[it.cat] === it.id;
+        info = on ? "Porté par ton compagnon" : "Dans ton inventaire";
+        btn = '<button class="btn ghost" data-a="equip" data-v="'+it.id+'">'+(on ? "Retirer" : "Équiper")+'</button>';
+      } else if(lock){
+        info = '🔒 Se débloque au niveau '+it.lv+' · '+it.c+' 💎';
+        btn = '<button class="btn" disabled>Acheter</button>';
+      } else {
+        var pr = priceOf(it);
+        info = (pr < it.c ? '<span class="strike">'+it.c+'</span> ' : '')+pr+' 💎'+(p.gems >= pr ? '' : ' · encore '+(pr-p.gems)+' 💎');
+        btn = '<button class="btn" data-a="buy" data-v="'+it.id+'"'+(p.gems >= pr ? '' : ' disabled')+'>Acheter</button>';
+      }
+      h += '<div class="reward"><span class="e"'+(it.bg && !lock ? ' style="background:'+it.bg+'"' : '')+'>'+(lock ? "🔒" : it.e)+'</span><span class="tx"><b>'+esc(it.n)+'</b><br><small>'+info+'</small></span>'+btn+'</div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+/* ---------- Compagnon ---------- */
+function petStage(p){ var s = 0; for(var i=0;i<STAGE_LV.length;i++){ if(p.best >= STAGE_LV[i]) s = i; } return s; }
+function petSpecies(p){ for(var i=0;i<SPECIES.length;i++){ if(SPECIES[i].id===p.pet.sp) return SPECIES[i]; } return null; }
+function petName(p){ return p.pet && p.pet.sp ? (p.pet.name || "") : "À adopter"; }
+function petHTML(p, size){
+  var sp = petSpecies(p); if(!sp) return "";
+  var hat = item(p.equip.hat), obj = item(p.equip.obj), deco = item(p.equip.deco);
+  return '<div class="stage" style="'+(deco ? 'background:'+deco.bg : '')+(size ? ';font-size:'+size+'px' : '')+'">'+
+    (deco ? '<span class="deco" aria-hidden="true">'+deco.e+'</span>' : '')+
+    '<button class="pet" data-a="pettap" aria-label="Parler à mon compagnon"><span class="body">'+sp.st[petStage(p)]+'</span>'+
+    (hat ? '<span class="hat">'+hat.e+'</span>' : '')+(obj ? '<span class="obj">'+obj.e+'</span>' : '')+'</button></div>';
+}
+function petLine(p){
+  var todo = 0; p.missions.forEach(function(m){ if(m.last !== today()) todo++; });
+  var mood = ""; p.moods.forEach(function(m){ if(m.d===today()) mood = m.m; });
+  if(mood === "orage" || mood === "pluie") return "Je suis là. Une carte besoin peut t’aider aujourd’hui.";
+  if(todo && Math.random() < .5) return "Il te reste "+todo+" mission"+(todo>1?"s":"")+" aujourd’hui. On y va ensemble ?";
+  return PHRASES[Math.floor(Math.random()*PHRASES.length)];
+}
+function vPet(p){
+  var sp = petSpecies(p);
+  if(!sp){
+    var h = '<p class="lead">Un œuf t’attend ! Choisis ton compagnon. Il grandira avec toi à chaque niveau record et t’encouragera tous les jours.</p><div class="consoles">';
+    SPECIES.forEach(function(s){
+      h += '<button class="cons" data-a="adopt" data-v="'+s.id+'"><span style="font-size:40px;display:block;margin-bottom:6px">'+s.st.join(" ")+'</span><b>'+esc(s.n)+'</b><small>Adopter</small></button>';
+    });
+    return h + '</div>';
+  }
+  var st = petStage(p), next = STAGE_LV[st+1];
+  var h2 = petHTML(p) + '<div class="bubble">'+esc(petLine(p))+'</div>';
+  h2 += '<p class="note" style="text-align:center">'+(next ? "Prochaine évolution quand ton record atteindra le niveau "+next+" ("+sp.st[st+1]+")" : "Ton compagnon a atteint sa forme finale !")+'</p>';
+  h2 += '<h2>Son nom</h2><div class="row"><input class="field" id="petname" maxlength="16" value="'+esc(p.pet.name)+'"><button class="btn ghost" data-a="petname">Renommer</button></div>';
+  h2 += '<h2>Garde-robe</h2>';
+  var any = false;
+  ["hat","obj","deco"].forEach(function(cat){
+    var mine = SHOP.filter(function(it){ return it.cat === cat && p.owned.indexOf(it.id) >= 0; });
+    if(!mine.length) return;
+    any = true;
+    h2 += '<div class="chips" style="margin-bottom:10px">';
+    mine.forEach(function(it){ h2 += '<button class="chip'+(p.equip[cat]===it.id?' sel':'')+'" data-a="equip" data-v="'+it.id+'">'+it.e+' '+esc(it.n)+'</button>'; });
+    h2 += '</div>';
+  });
+  if(!any) h2 += '<div class="card">Ta garde-robe est vide. Passe à la boutique pour trouver un chapeau, un objet ou un décor.<p style="margin-bottom:0"><button class="btn" data-a="go" data-v="bonus">Aller à la boutique</button></p></div>';
+  return h2;
+}
+/* ---------- Trophées ---------- */
+function vTrophies(p){
+  var h = '<p class="lead">'+trophyCount(p)+' trophée(s) sur '+TROPHIES.length+'. Chacun raconte un pas que tu as fait.</p>';
+  if(p.seasons.length){
+    h += '<h2>Mes saisons</h2><div class="list">';
+    p.seasons.slice().reverse().forEach(function(s){
+      var md = medal(s.lv);
+      h += '<div class="trophy"><span class="e">'+md.e+'</span><span><b>'+esc(s.label)+'</b><small>'+md.n+' · niveau '+s.lv+' · '+s.xp+' XP</small></span></div>';
+    });
+    h += '</div><h2>Trophées</h2>';
+  }
+  h += '<div class="list">';
+  TROPHIES.forEach(function(t){
+    var has = p.trophies.indexOf(t.id) >= 0;
+    h += '<div class="trophy'+(has?'':' lock')+'"><span class="e">'+(has ? t.e : "🔒")+'</span><span><b>'+esc(t.t)+'</b><small>'+esc(t.d)+'</small></span></div>';
+  });
+  return h + '</div>';
+}
+/* ---------- Console (personnalisation) ---------- */
+function vConsole(p){
+  var L = level(p.xp), B = p.best;
+  var h = '<p class="lead">Chaque niveau t’offre un coffre de gemmes et une nouveauté pour ta console. Ce que tu débloques reste à toi, même quand une nouvelle saison commence.</p>';
+  h += '<h2>Route des niveaux</h2><div class="route">';
+  var from = showRoute ? 2 : Math.min(L+1, MAXL-2), to = showRoute ? MAXL : Math.min(L+3, MAXL);
+  if(!showRoute && L >= MAXL){ from = MAXL; to = MAXL; }
+  for(var k = from; k <= to; k++){
+    var u = unlocksAt(k), done = k <= L, owned = k <= B;
+    h += '<div class="step'+(done?' done':'')+(k===L+1?' next':'')+'"><span class="n">'+(done ? "✓" : k)+'</span><span class="tx"><b>Niveau '+k+'</b>'+
+      '<small>🎁 Coffre +'+chestAt(k)+' 💎'+(done ? ' (gagné)' : '')+'</small>'+
+      '<small>'+u.map(esc).join(", ")+(owned && !done ? ' · déjà dans ta collection' : '')+'</small></span></div>';
+  }
+  h += '</div><p><button class="btn ghost" data-a="route">'+(showRoute ? "Voir seulement les prochains niveaux" : "Voir toute la route")+'</button></p>';
+  h += '<h2>Mon avatar</h2><div class="lockgrid">';
+  AVATARS.forEach(function(a){
+    var lock = a.lv > B;
+    h += '<button class="pick'+(p.av===a.e?' sel':'')+(lock?' lock':'')+'" data-a="setav" data-v="'+a.e+'"'+(lock?' aria-disabled="true"':'')+'>'+(lock ? "🔒" : a.e)+(lock ? '<span class="lv">Niv. '+a.lv+'</span>' : '')+'</button>';
+  });
+  h += '</div><h2>Mon cadre</h2><div class="lockgrid" style="grid-template-columns:repeat(auto-fill,minmax(96px,1fr))">';
+  FRAMES.forEach(function(f){
+    var lock = f.lv > B;
+    h += '<button class="framepick'+(p.fr===f.id?' sel':'')+(lock?' lock':'')+'" data-a="setfr" data-v="'+f.id+'"><span class="av'+(f.id!=="none"?' fr-'+f.id:'')+'">'+(lock ? "🔒" : p.av)+'</span>'+
+      '<small>'+(lock ? "Niv. "+f.lv : esc(f.n))+'</small></button>';
+  });
+  h += '</div><h2>Mon fond d’écran</h2><div class="consoles">';
+  WALLS.forEach(function(w){
+    var lock = w.lv > B;
+    h += '<button class="wpprev'+(p.wp===w.id?' sel':'')+(lock?' lock':'')+'" data-a="setwp" data-v="'+w.id+'"><span class="sw2'+(w.id!=="none"?' wp-'+w.id:'')+'"></span>'+
+      '<b>'+(lock?"🔒 ":"")+esc(w.n)+'</b><small>'+(lock ? "Niveau "+w.lv : (p.wp===w.id ? "Équipé" : "Disponible"))+'</small></button>';
+  });
+  h += '</div><h2>Ma console</h2><div class="consoles">';
+  THEMES.forEach(function(t){
+    var lock = t.lv > B;
+    h += '<button class="cons'+(p.th===t.id?' sel':'')+(lock?' lock':'')+'" data-a="setth" data-v="'+t.id+'"><span class="mock"><i style="background:'+t.l+'"></i><em></em><i style="background:'+t.r+'"></i></span>'+
+      '<b>'+(lock?"🔒 ":"")+esc(t.n)+'</b><small>'+(lock ? "Niveau "+t.lv : (p.th===t.id ? "Équipée" : "Disponible"))+'</small></button>';
+  });
+  h += '</div><h2>Mon pseudo</h2><div class="row"><input class="field" id="rename" maxlength="20" value="'+esc(p.name)+'"><button class="btn ghost" data-a="rename">Modifier</button></div>';
+  return h;
+}
+/* ---------- Météo ---------- */
+function vMood(p){
+  var t = null; p.moods.forEach(function(m){ if(m.d===today()) t = m.m; });
+  var h = '<p class="lead">Comment tu te sens en arrivant en classe ? Choisir sa météo, ça aide à comprendre ce dont on a besoin.</p><div class="moods">';
+  MOODS.forEach(function(m){ h += '<button class="moodb'+(t===m.id?' sel':'')+'" data-a="mood" data-v="'+m.id+'"><span class="e">'+m.e+'</span><span>'+m.t+'</span></button>'; });
+  h += '</div>';
+  if(t === "pluie" || t === "orage"){
+    h += '<div class="card" style="margin-top:16px"><b>Ça arrive à tout le monde.</b> Qu’est-ce qui pourrait t’aider aujourd’hui ?<p style="margin-bottom:0"><button class="btn" data-a="go" data-v="besoins">Choisir une carte besoin</button></p></div>';
+  }
+  var week = [];
+  for(var i=6;i>=0;i--){ var d = new Date(); d.setDate(d.getDate()-i); week.push(dstr(d)); }
+  h += '<h2>Ma semaine</h2><div class="week">';
+  week.forEach(function(ds){
+    var e = "·"; p.moods.forEach(function(m){ if(m.d===ds){ MOODS.forEach(function(k){ if(k.id===m.m) e = k.e; }); } });
+    h += '<div><span>'+e+'</span>'+wday(ds)+'</div>';
+  });
+  return h + '</div>';
+}
+/* ---------- Grands objectifs ---------- */
+function vGoals(p){
+  var act = p.goals.filter(function(g){ return !g.done; }), doneG = p.goals.filter(function(g){ return g.done; });
+  var h = '<h2>Mon grand objectif</h2>';
+  if(!act.length && !gForm) h += '<div class="card">Un grand objectif, c’est quelque chose que tu veux réussir dans quelques semaines, découpé en petites étapes.</div>';
+  act.forEach(function(g){
+    var n = 0; g.steps.forEach(function(x){ if(x.done) n++; });
+    h += '<div class="card" style="margin-bottom:10px"><div class="row"><b style="flex:1">🗺️ '+esc(g.t)+'</b>'+sayBtn(g.t)+'<button class="icon-btn" data-a="gdel" data-v="'+g.id+'" aria-label="Retirer l’objectif">🗑️</button></div>'+
+      '<small class="note">'+esc(g.when)+' · '+n+' / '+g.steps.length+' étapes</small><div class="prog"><i style="width:'+Math.round(n/g.steps.length*100)+'%"></i></div><div class="list">';
+    g.steps.forEach(function(x, i){
+      h += '<button class="stepchk'+(x.done?' ok':'')+'" data-a="gstep" data-v="'+g.id+'|'+i+'"'+(x.done?' disabled':'')+'><span class="bx">'+(x.done?"✓":"")+'</span><span>'+esc(x.t)+'</span></button>';
+    });
+    h += '</div></div>';
+  });
+  if(gForm){
+    h += '<div class="card"><input class="field" id="gtitle" maxlength="80" placeholder="Mon objectif : ex. avoir la moyenne en maths">'+
+      '<div class="chips" style="margin:10px 0">'+GOAL_WHEN.map(function(w, i){ return '<button class="chip'+(gWhen===i?' sel':'')+'" data-a="gwhen" data-v="'+i+'">'+w+'</button>'; }).join("")+'</div>'+
+      '<p class="note" style="margin:0 0 6px">Mes étapes (au moins une) :</p>';
+    for(var i=0;i<4;i++) h += '<input class="field" id="gs'+i+'" maxlength="80" placeholder="Étape '+(i+1)+'" style="margin-bottom:6px">';
+    h += '<div class="row"><button class="btn" data-a="gadd">Lancer mon objectif</button><button class="btn ghost" data-a="gform">Annuler</button></div></div>';
+  } else if(act.length < 2){
+    h += '<p><button class="btn ghost" data-a="gform">＋ Nouveau grand objectif</button></p>';
+  }
+  if(doneG.length) h += '<p class="note">Objectifs atteints : '+doneG.map(function(g){ return "✅ "+esc(g.t); }).join(", ")+'</p>';
+  return h;
+}
+/* ---------- Focus (minuteur, Je démarre, routines, pause active) ---------- */
+function fmt(sec){ return pad(Math.floor(sec/60))+":"+pad(sec%60); }
+function tmPill(){ return TM.dur ? '<span class="pill" id="tmini" title="Minuteur">⏱️ '+fmt(TM.left)+'</span>' : ''; }
+function discBg(){ var pc = TM.dur ? TM.left/TM.dur*100 : 100; return "conic-gradient("+(TM.kind==="move" ? "var(--ok)" : "var(--jl)")+" "+pc.toFixed(2)+"%, var(--surface2) 0)"; }
+function tmStart(min, kind){ TM.dur = min*60; TM.left = TM.dur; TM.end = Date.now() + TM.dur*1000; TM.run = true; TM.kind = kind; if(!tickH) tickH = setInterval(tick, 500); }
+function tmPause(){
+  if(TM.run){ TM.left = Math.max(0, Math.round((TM.end - Date.now())/1000)); TM.run = false; }
+  else if(TM.left > 0){ TM.end = Date.now() + TM.left*1000; TM.run = true; }
+}
+function tmStop(){ TM.run = false; TM.left = 0; TM.dur = 0; }
+function tick(){
+  if(TM.run){ TM.left = Math.max(0, Math.round((TM.end - Date.now())/1000)); }
+  var dsc = $("tdisc"), tt = $("ttime"), mini = $("tmini");
+  if(dsc && dsc.style) dsc.style.background = discBg();
+  if(tt) tt.textContent = fmt(TM.left);
+  if(mini) mini.textContent = "⏱️ "+fmt(TM.left);
+  if(TM.run && TM.left <= 0){ TM.run = false; tmDone(); }
+}
+function tmDone(){
+  var kind = TM.kind, p = cur(); TM.dur = 0; TM.left = 0;
+  beep("lvl"); try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+  if(kind === "focus" && p){
+    p.st.f++; var d = daily(p); d.focus = (d.focus||0) + 1;
+    if(d.focus <= 4) gain(p, 5, 2, "Bloc de concentration terminé !"); else { markDay(p); save(); checkTrophies(p); }
+    modal('<div class="lvl"><div class="medal">⏱️</div><h2>Bloc terminé !</h2><p>Tu as tenu jusqu’au bout. Avant de repartir, offre-toi une pause active d’une minute.</p>'+
+      '<p><button class="btn ok" data-a="moves">🤸 Pause active</button> <button class="btn ghost" data-a="close">Plus tard</button></p></div>');
+  } else {
+    modal('<div class="lvl"><div class="medal">🌿</div><h2>Pause terminée</h2><p>Ton corps est prêt, ta tête aussi. On repart ?</p><p><button class="btn" data-a="close">C’est reparti</button></p></div>');
+  }
+  if(screen === "focus" || screen === "home") render();
+}
+function vFocus(p){
+  var h = '<p class="lead">Ici, des outils pour te concentrer : un minuteur pour voir le temps passer, de l’aide pour te lancer dans une tâche, des routines et des pauses pour bouger.</p>';
+  h += '<h2>⏱️ Mon minuteur</h2><div class="card"><div class="disc" id="tdisc" style="background:'+discBg()+'"><span id="ttime">'+fmt(TM.dur ? TM.left : 0)+'</span></div>';
+  if(TM.dur){
+    h += '<div class="tmrow"><button class="btn" data-a="tm" data-v="pause">'+(TM.run ? "⏸ Pause" : "▶ Reprendre")+'</button><button class="btn ghost" data-a="tm" data-v="stop">⏹ Arrêter</button></div>';
+  } else {
+    h += '<p class="note" style="text-align:center">Choisis la durée de ton bloc de travail :</p><div class="tmrow">'+
+      [5,10,15,20].map(function(m){ return '<button class="btn" data-a="tm" data-v="start|'+m+'">'+m+' min</button>'; }).join("")+'</div>';
+  }
+  h += '</div>';
+  h += '<h2>🚀 Je démarre</h2>';
+  if(p.task){
+    var n = 0; p.task.steps.forEach(function(x){ if(x.done) n++; });
+    h += '<div class="card"><div class="row"><b style="flex:1">'+p.task.e+' '+esc(p.task.t)+'</b></div><div class="prog"><i style="width:'+Math.round(n/p.task.steps.length*100)+'%"></i></div><div class="list">';
+    p.task.steps.forEach(function(x, i){
+      h += '<div class="row"><button class="stepchk'+(x.done?' ok':'')+'" data-a="tstep" data-v="'+i+'"'+(x.done?' disabled':'')+'><span class="bx">'+(x.done?"✓":(i+1))+'</span><span>'+esc(x.t)+'</span></button>'+sayBtn(x.t)+'</div>';
+    });
+    h += '</div><div class="tmrow">'+(TM.dur ? '' : '<button class="btn" data-a="tm" data-v="start|10">⏱️ 10 min pour avancer</button>')+'<button class="btn ghost" data-a="tquit">Changer de tâche</button></div></div>';
+  } else {
+    h += '<p class="note" style="margin-top:0">Du mal à commencer ? Choisis ta tâche, je la découpe en 3 petites étapes.</p><div class="grid">';
+    TASK_TYPES.forEach(function(t){ h += '<button class="need" data-a="tstart" data-v="'+t.id+'"><span class="e">'+t.e+'</span><b>'+esc(t.t)+'</b></button>'; });
+    h += '</div><div class="row" style="margin-top:10px"><input class="field" id="tcustom" maxlength="60" placeholder="Autre chose ? Écris ta tâche"><button class="btn" data-a="tcustom">Go</button></div>';
+  }
+  h += '<h2>🔁 Mes routines</h2><div class="list">';
+  var rt = routineState(p);
+  ROUTINES.forEach(function(r){
+    var c = rt.c[r.id] || [], n = 0; r.items.forEach(function(x, i){ if(c[i]) n++; });
+    h += '<div class="card"><b>'+r.e+' '+esc(r.t)+'</b> <small class="note">'+n+'/'+r.items.length+(rt.c[r.id+"_ok"] ? " · complète ✓" : "")+'</small><div class="list" style="margin-top:8px">';
+    r.items.forEach(function(x, i){
+      h += '<button class="stepchk'+(c[i]?' ok':'')+'" data-a="rtick" data-v="'+r.id+'|'+i+'"><span class="bx">'+(c[i]?"✓":"")+'</span><span>'+esc(x)+'</span></button>';
+    });
+    h += '</div></div>';
+  });
+  h += '</div><h2>🤸 Pause active</h2><div class="card">Une minute de mouvements discrets, à faire à ta place, pour aider ta tête à se recharger.<p style="margin-bottom:0"><button class="btn ok" data-a="moves">Voir les mouvements</button></p></div>';
+  return h;
+}
+function routineState(p){ if(!p.rt || p.rt.d !== today()) p.rt = {d:today(), c:{}}; return p.rt; }
+function movesModal(){
+  modal('<h2>🤸 Pause active</h2><p class="note" style="margin-top:0">Fais ces mouvements tranquillement, sans te lever.</p><div class="list">'+
+    MOVES.map(function(m){ return '<div class="row card" style="padding:10px"><span style="flex:1">'+esc(m)+'</span>'+sayBtn(m)+'</div>'; }).join("")+
+    '</div><p>'+(TM.dur ? '<span class="note">Un minuteur est déjà en cours.</span>' : '<button class="btn ok" data-a="movestart">Lancer 1 minute</button>')+' <button class="btn ghost" data-a="close">Fermer</button></p>');
+}
+/* ---------- Vue classe (prof) ---------- */
+function classView(){
+  var since = new Date(); since.setDate(since.getDate()-30); var lim = dstr(since);
+  var agg = {}, nP = S.profiles.length;
+  S.profiles.forEach(function(q){
+    var seen = {};
+    q.needsLog.forEach(function(l){
+      if(l.d < lim) return;
+      if(!agg[l.id]) agg[l.id] = {c:0, s:0};
+      agg[l.id].c++;
+      if(!seen[l.id]){ seen[l.id] = true; agg[l.id].s++; }
+    });
+  });
+  var rows = [];
+  for(var k in agg){
+    var nd = null; NEEDS.forEach(function(x){ if(x.id===k) nd = x; });
+    rows.push({n: nd || {e:"💬", t:"Message personnel"}, c:agg[k].c, s:agg[k].s});
+  }
+  rows.sort(function(a,b){ return b.s - a.s || b.c - a.c; });
+  var seuil = Math.max(3, Math.ceil(nP*0.25));
+  var h = '<h2>Vue classe</h2><div class="card"><p style="margin-top:0"><b>Besoins exprimés (30 derniers jours)</b></p>';
+  if(!rows.length) h += '<p class="note">Aucun besoin exprimé pour l’instant.</p>';
+  rows.slice(0,8).forEach(function(r){
+    h += '<div class="row" style="margin:4px 0"><span>'+r.n.e+'</span><span style="flex:1">'+esc(r.n.t)+'</span><span>'+r.s+' élève(s) · '+r.c+'×</span></div>';
+    if(r.s >= seuil) h += '<p class="note flag" style="margin:0 0 6px 28px">Demandé par beaucoup d’élèves : piste pour adapter le support pour toute la classe.</p>';
+  });
+  var hard = [];
+  SKILLS.forEach(function(sk){ var c = 0; S.profiles.forEach(function(q){ if(lastRate(q, sk.id) === 1) c++; }); if(c) hard.push(esc(sk.t)+" ("+c+")"); });
+  h += '<p><b>Compétences jugées difficiles :</b> '+(hard.length ? hard.join(", ") : "aucune signalée")+'</p>';
+  var wk = new Date(); wk.setDate(wk.getDate()-6); var wl = dstr(wk), mc = {};
+  S.profiles.forEach(function(q){ q.moods.forEach(function(m){ if(m.d >= wl) mc[m.m] = (mc[m.m]||0)+1; }); });
+  h += '<p style="margin-bottom:0"><b>Météo de la semaine :</b> '+MOODS.map(function(m){ return m.e+" "+(mc[m.id]||0); }).join("   ")+'</p>';
+  h += '<p class="note" style="margin-bottom:0">Logique CUA : quand un même besoin revient chez plusieurs élèves, l’obstacle vient souvent du support, pas de l’élève.</p></div>';
+  return h;
+}
+/* ---------- Réglages ---------- */
+function vSettings(){
+  var st = S.settings;
+  function seg(key, opts){
+    var s = '<div class="seg">';
+    opts.forEach(function(o){ s += '<button class="'+(st[key]===o[0]?'sel':'')+'" data-a="set" data-v="'+key+'|'+o[0]+'">'+o[1]+'</button>'; });
+    return s + '</div>';
+  }
+  function tog(key, label, sub){
+    return '<div class="toggle"><span><b style="font-weight:500">'+label+'</b>'+(sub ? '<br><small class="note">'+sub+'</small>' : '')+'</span>'+
+      '<button class="sw'+(st[key]?' on':'')+'" data-a="tog" data-v="'+key+'" role="switch" aria-checked="'+(!!st[key])+'" aria-label="'+label+'"></button></div>';
+  }
+  return '<h2>Affichage</h2>'+seg("theme", [["auto","Auto"],["light","Clair"],["dark","Sombre"]])+
+    '<h2>Taille du texte</h2>'+seg("size", [[0,"A"],[1,"A+"],[2,"A++"]])+
+    '<h2>Confort</h2>'+
+    tog("spacing", "Texte aéré", "Plus d’espace entre les lettres, les mots et les lignes")+
+    tog("tts", "Boutons d’écoute", "Fait lire les explications, les missions et les cartes à voix haute")+
+    tog("pictos", "Mode pictos", "Grandes icônes, explications à écouter plutôt qu’à lire")+
+    tog("calm", "Mode calme", "Coupe les sons et les animations, épure l’accueil")+
+    tog("sound", "Sons de la console")+
+    tog("motion", "Animations");
+}
+/* ---------- Espace prof ---------- */
+function vTeacher(){
+  if(!tUnlocked){
+    var dots = "";
+    for(var i=0;i<4;i++) dots += '<i class="'+(i<pinBuf.length?'f':'')+'"></i>';
+    var keys = "";
+    [1,2,3,4,5,6,7,8,9].forEach(function(k){ keys += '<button data-a="pin" data-v="'+k+'">'+k+'</button>'; });
+    keys += '<button data-a="pinc" aria-label="Effacer">⌫</button><button data-a="pin" data-v="0">0</button><span></span>';
+    return '<p class="lead" style="text-align:center">Cet espace est réservé à ton prof.</p><div class="dots">'+dots+'</div><div class="keypad">'+keys+'</div>'+
+      (S.teacher.pin === "1234" ? '<p class="note" style="text-align:center">Code par défaut : 1234. Pensez à le changer.</p>' : '');
+  }
+  if(!tSel || !byId(tSel)) tSel = S.cur;
+  var p = byId(tSel), h = '<h2 style="margin-top:8px">Élève</h2><div class="chips">';
+  S.profiles.forEach(function(q){ h += '<button class="chip'+(q.id===tSel?' sel':'')+'" data-a="tsel" data-v="'+q.id+'">'+q.av+' '+esc(q.name)+'</button>'; });
+  h += '</div>' + classView();
+  if(p){
+    var counts = needCounts(p);
+    h += '<h2>Encourager '+esc(p.name)+'</h2><div class="card"><input class="field" id="tmsg" maxlength="200" placeholder="Message d’encouragement (facultatif)">'+
+      '<div class="chips" style="margin-top:10px"><button class="chip" data-a="tgive" data-v="10|0">+10 XP</button><button class="chip" data-a="tgive" data-v="25|0">+25 XP</button>'+
+      '<button class="chip" data-a="tgive" data-v="0|10">+10 💎</button><button class="chip" data-a="tgive" data-v="0|25">+25 💎</button><button class="chip" data-a="tgive" data-v="0|0">Message seul</button></div>'+
+      '<p class="note">L’élève verra le message en ouvrant son accueil.</p></div>';
+    h += '<h2>Synthèse individuelle</h2><p class="note" style="margin-top:0">Utile pour un PAP, un PPRE ou une équipe éducative.</p><div class="card">'+
+      '<p style="margin-top:0">Niveau '+level(p.xp)+' cette saison (record : '+p.best+') · '+p.xp+' XP · '+p.gems+' 💎 · série max '+p.st.ms+' jour(s)</p>'+
+      (p.seasons.length ? '<p><b>Saisons passées :</b> '+p.seasons.map(function(s){ return esc(s.label)+" niv. "+s.lv; }).join(", ")+'</p>' : '')+
+      '<p>'+p.st.m+' missions réussies, '+p.st.n+' besoins exprimés, '+p.st.w+' victoires notées, '+p.st.r+' achats en boutique.</p>'+
+      '<p>'+p.st.f+' blocs de concentration, '+p.st.t+' tâches lancées et finies, '+p.st.rt+' routines complètes, '+p.st.g+' grands objectifs atteints.</p>'+
+      '<p><b>Besoins les plus demandés :</b> '+(counts.length ? counts.slice(0,4).map(function(c){ return esc(c.n.t)+" ("+c.c+")"; }).join(", ") : "aucun pour l’instant")+'</p>'+
+      '<p style="margin-bottom:0"><b>Autopositionnement actuel :</b><br>'+SKILLS.map(function(s){ var v = lastRate(p, s.id); return esc(s.t)+" : "+(v ? RATES[v] : "—"); }).join("<br>")+'</p></div>';
+    if(p.wins.length){
+      h += '<h2>Dernières victoires notées</h2><div class="list">';
+      p.wins.slice(-3).reverse().forEach(function(w){ h += '<div class="save"><span class="dt">'+fdate(w.d)+'</span><span style="flex:1">'+esc(w.t)+'</span></div>'; });
+      h += '</div>';
+    }
+  }
+  var si = seasonInfo(), mode = S.teacher.seasonMode;
+  h += '<h2>Saisons</h2><div class="card"><p style="margin-top:0">Saison en cours : <b>'+esc(si.label)+'</b>'+(si.left !== null ? ', encore '+si.left+' jour(s)' : '')+'.</p>'+
+    '<div class="seg">'+[["trimestre","Trimestres"],["semestre","Semestres"],["manuel","Manuel"]].map(function(o){ return '<button class="'+(mode===o[0]?'sel':'')+'" data-a="smode" data-v="'+o[0]+'">'+o[1]+'</button>'; }).join("")+'</div>'+
+    '<p class="note">En fin de saison, le niveau de chaque élève repart à 1. Gemmes, trophées et éléments débloqués sont conservés, et l’élève reçoit une médaille selon son niveau final. Changer de rythme ne remet personne à zéro.</p>'+
+    (mode === "manuel" ? '<button class="btn l" data-a="newseason">Lancer une nouvelle saison pour tous</button>' : '')+'</div>';
+  h += '<h2>Sauvegarde et partage</h2><p class="note" style="margin-top:0">Les données restent sur cet appareil uniquement. Pour changer d’appareil, copiez la sauvegarde puis collez-la sur le nouveau.</p>'+
+    '<div class="row" style="flex-wrap:wrap"><button class="btn ghost" data-a="export">Copier la sauvegarde</button><button class="btn ghost" data-a="import">Coller une sauvegarde</button></div>';
+  h += '<h2>Code prof</h2><div class="row"><input class="field" id="newpin" inputmode="numeric" maxlength="4" placeholder="Nouveau code à 4 chiffres"><button class="btn ghost" data-a="setpin">Changer</button></div>';
+  if(p) h += '<h2 class="danger">Zone sensible</h2><button class="btn l" data-a="delp" data-v="'+p.id+'">Supprimer le profil de '+esc(p.name)+'</button>';
+  h += '<p style="margin-top:24px"><button class="btn ghost" data-a="lock">🔒 Verrouiller l’espace prof</button></p>';
+  return h;
+}
+
+/* =================== Actions =================== */
+function act(a, v, el){
+  var p = cur();
+  switch(a){
+    case "boot":
+      beep("boot");
+      var b = document.querySelector(".boot"); if(b) b.parentNode.removeChild(b);
+      screen = p ? "home" : "who"; render(); break;
+    case "bg": break;
+    case "close": closeModal(); beep("back"); break;
+    case "say": speak(v); break;
+    case "towho": newP = null; go("who"); beep("back"); break;
+    case "pick": S.cur = v; checkSeason(cur()); save(); homeIdx = 0; beep("ok"); go("home"); break;
+    case "newp": newP = {name:"", av:"🦊", th:"neon"}; beep("click"); go("new"); break;
+    case "npav": newP.name = $("pname").value; newP.av = v; beep("sel"); render(); break;
+    case "create":
+      var nm = ($("pname").value || "").replace(/^\s+|\s+$/g, "");
+      if(!nm){ beep("err"); toast("Écris ton prénom ou un pseudo"); $("pname").focus(); return; }
+      var np = blankProfile(nm, newP.av, "neon");
+      [0,1,2].forEach(function(i){ np.missions.push({id:"m"+Date.now()+i, e:SUGG[i].e, t:SUGG[i].t, last:"", count:0}); });
+      S.profiles.push(np); S.cur = np.id; newP = null; markDay(np); checkSeason(np); save();
+      beep("lvl"); homeIdx = 0; go("home");
+      setTimeout(function(){ toast("Bienvenue "+nm+" ! Tes 3 premières missions t’attendent", true); }, 300);
+      break;
+    case "home": beep("back"); tUnlocked = false; pinBuf = ""; go("home"); break;
+    case "go":
+      if(v === "joueurs"){ beep("back"); S.cur = null; save(); go("who"); return; }
+      if(v === "calme"){ S.settings.calm = !S.settings.calm; save(); beep("sel"); toast(S.settings.calm ? "🌙 Mode calme activé" : "Mode calme désactivé"); render(); return; }
+      for(var ti=0; ti<TILES.length; ti++){ if(TILES[ti].id===v) homeIdx = ti; }
+      beep("click"); go(v); break;
+    case "gomodal": closeModal(); go(v); break;
+    case "inbox":
+      var msgs = p.inbox.map(function(m){ return '<div class="save"><span class="dt">'+fdate(m.d)+'</span><span style="flex:1">'+esc(m.t)+'</span></div>'; }).join("");
+      p.inbox = []; save(); beep("ok");
+      modal('<h2>📩 Message de ton prof</h2><div class="list">'+msgs+'</div><p><button class="btn" data-a="close">Merci !</button></p>');
+      render(); break;
+
+    case "mdone":
+      var md2 = null;
+      p.missions.forEach(function(m){ if(m.id===v && m.last!==today()){ m.last = today(); m.count++; p.st.m++; md2 = m; } });
+      if(!md2) return;
+      var df = DIFF[md2.lvl||"n"];
+      beep("ok"); gain(p, df.xp, df.g, md2.lvl === "d" ? "Défi relevé, bravo !" : "Ton effort paie !"); render(); break;
+    case "mdiff":
+      p.missions.forEach(function(m){ if(m.id===v){ var o = ["f","n","d"], k = o.indexOf(m.lvl||"n"); m.lvl = o[(k+1)%3]; } });
+      save(); beep("sel"); render(); break;
+    case "gform": gForm = !gForm; render(); break;
+    case "gwhen": gWhen = +v; var gt0 = $("gtitle"); var keep = gt0 ? gt0.value : ""; var ks = []; for(var gi0=0; gi0<4; gi0++){ var e0 = $("gs"+gi0); ks.push(e0 ? e0.value : ""); }
+      render(); if($("gtitle")) $("gtitle").value = keep; for(var gi1=0; gi1<4; gi1++){ if($("gs"+gi1)) $("gs"+gi1).value = ks[gi1]; } break;
+    case "gadd":
+      var gt = ($("gtitle").value || "").replace(/^\s+|\s+$/g, ""), gsteps = [];
+      for(var gi=0; gi<4; gi++){ var sv = ($("gs"+gi).value || "").replace(/^\s+|\s+$/g, ""); if(sv) gsteps.push({t:sv, done:false}); }
+      if(!gt || !gsteps.length){ beep("err"); toast("Écris ton objectif et au moins une étape"); return; }
+      p.goals.push({id:"g"+Date.now(), t:gt, when:GOAL_WHEN[gWhen], steps:gsteps, done:false, d:today()});
+      gForm = false; save(); beep("ok"); toast("Objectif lancé ! Une étape à la fois.", true); render(); break;
+    case "gstep":
+      var gp = v.split("|"), goal = null;
+      p.goals.forEach(function(g){ if(g.id===gp[0]) goal = g; });
+      if(!goal || goal.done) return;
+      var stp = goal.steps[+gp[1]]; if(!stp || stp.done) return;
+      stp.done = true;
+      var all = true; goal.steps.forEach(function(x){ if(!x.done) all = false; });
+      if(all){ goal.done = true; goal.dd = today(); p.st.g++; beep("lvl"); gain(p, 30, 15, "Objectif atteint, quelle persévérance !"); }
+      else { beep("ok"); gain(p, 8, 2, "Étape franchie !"); }
+      render(); break;
+    case "gdel":
+      confirmBox("Retirer cet objectif ?", "Ce n’est pas grave de changer d’objectif. Tu pourras en choisir un autre.", "gdelok", v); break;
+    case "gdelok":
+      p.goals = p.goals.filter(function(g){ return g.id !== v; }); save(); closeModal(); render(); break;
+    case "mdel":
+      confirmBox("Retirer cette mission ?", "Tu pourras la rajouter plus tard.", "mdelok", v); break;
+    case "mdelok":
+      p.missions = p.missions.filter(function(m){ return m.id !== v; }); save(); closeModal(); render(); break;
+    case "madd":
+      var s = SUGG[+v]; p.missions.push({id:"m"+Date.now(), e:s.e, t:s.t, last:"", count:0}); save(); beep("sel"); render(); break;
+    case "mcustom":
+      var mt = ($("mcustom").value || "").replace(/^\s+|\s+$/g, "");
+      if(!mt){ beep("err"); return; }
+      p.missions.push({id:"m"+Date.now(), e:"🎮", t:mt, last:"", count:0}); save(); beep("sel"); render(); break;
+
+    case "need":
+      var n = NEEDS[+v]; logNeed(p, n.id); showNeed(n); break;
+    case "ncustom":
+      var nt = ($("ncustom").value || "").replace(/^\s+|\s+$/g, "");
+      if(!nt){ beep("err"); toast("Écris d’abord ton message"); return; }
+      logNeed(p, "perso"); showNeed({e:"💬", t:"Mon message", m:nt}); break;
+
+    case "rateopen": beep("click"); rateModal(p, v); break;
+    case "rate":
+      var parts = v.split("|"), id = parts[0], val = +parts[1];
+      var arr = p.ratings[id] || [], prevMax = 0;
+      arr.forEach(function(r){ if(r.v > prevMax) prevMax = r.v; });
+      if(arr.length && arr[arr.length-1].d === today()) arr[arr.length-1].v = val; else arr.push({d:today(), v:val});
+      if(arr.length > 60) arr.shift();
+      p.ratings[id] = arr;
+      var d = daily(p), xp = 0, label = "";
+      if(!d.rated){ d.rated = true; xp += 5; label = "Bien vu !"; }
+      if(prevMax && val > prevMax){ p.st.up++; xp += 10; label = "Tu progresses !"; }
+      beep("ok");
+      if(xp) gain(p, xp, 0, label); else { markDay(p); save(); checkTrophies(p); }
+      rateModal(p, id); render(); break;
+
+    case "wpick":
+      var wp2 = v.split("|"), wk = wp2[0], wi = +wp2[1], wkeep = $("wtext") ? $("wtext").value : "";
+      wd[wk] = wd[wk] === wi ? -1 : wi; beep("sel"); render();
+      if($("wtext")) $("wtext").value = wkeep; break;
+    case "wadd":
+      var wext = ($("wtext").value || "").replace(/^\s+|\s+$/g, ""), wt = winText(wext);
+      if(wt.length < 3){ beep("err"); toast("Choisis au moins ce que tu as fait, ou écris quelques mots"); return; }
+      wd = {w:-1, s:-1, f:-1};
+      p.wins.push({d:today(), t:wt}); if(p.wins.length > 200) p.wins.shift();
+      p.st.w++;
+      var dw = daily(p); dw.wins = (dw.wins||0) + 1;
+      beep("ok");
+      if(dw.wins <= 3) gain(p, 8, 3, "Victoire sauvegardée !"); else { save(); checkTrophies(p); toast("Victoire sauvegardée !"); }
+      render(); break;
+
+    case "buy":
+      var bi = item(v);
+      if(!bi || p.gems < priceOf(bi) || bi.lv > p.best) return;
+      confirmBox("Acheter "+bi.n+" ?", bi.e+" pour "+priceOf(bi)+" 💎", "buyok", v); break;
+    case "buyok":
+      var it = item(v);
+      if(!it || p.gems < priceOf(it)){ closeModal(); return; }
+      if(it.id === "gel"){ if(p.freezes >= 3){ closeModal(); return; } p.freezes++; }
+      else if(it.id === "dbl"){ if(p.dbl === today()){ closeModal(); return; } p.dbl = today(); }
+      else { if(p.owned.indexOf(it.id) >= 0){ closeModal(); return; } p.owned.push(it.id); if(petSpecies(p)) p.equip[it.cat] = it.id; }
+      p.gems -= priceOf(it); p.st.r++; save(); closeModal(); beep("ok");
+      toast(it.cat === "power" ? it.e+" "+it.n+" activé !" : (petSpecies(p) ? it.e+" Ton compagnon le porte déjà !" : it.e+" Rangé dans ton inventaire"), true);
+      checkTrophies(p); render(); break;
+    case "equip":
+      var ei = item(v); if(!ei || p.owned.indexOf(v) < 0) return;
+      if(!petSpecies(p)){ toast("Adopte d’abord ton compagnon"); go("compagnon"); return; }
+      p.equip[ei.cat] = p.equip[ei.cat] === v ? "" : v; save(); beep("sel"); render(); break;
+    case "adopt":
+      var spc = null; SPECIES.forEach(function(x){ if(x.id===v) spc = x; });
+      p.pet = {sp:v, name:spc.n}; save(); beep("lvl");
+      toast("Bienvenue à ton compagnon !", true); render(); break;
+    case "petname":
+      var pn = ($("petname").value || "").replace(/^\s+|\s+$/g, "");
+      if(!pn){ beep("err"); return; }
+      p.pet.name = pn; save(); toast("Nom enregistré"); render(); break;
+    case "pettap":
+      beep("sel");
+      var bub = document.querySelectorAll(".bubble"), pets = document.querySelectorAll(".pet");
+      var line = petLine(p);
+      for(var bi2=0; bi2<bub.length; bi2++) bub[bi2].textContent = line;
+      if(S.settings.tts) speak(line);
+      for(var pi=0; pi<pets.length; pi++){ pets[pi].classList.remove("hop"); void pets[pi].offsetWidth; pets[pi].classList.add("hop"); }
+      break;
+
+    case "saylead":
+      var ld = document.querySelector(".content .lead"); if(ld) speak(ld.textContent); break;
+    case "tm":
+      var tv = v.split("|");
+      if(tv[0] === "start"){ tmStart(+tv[1], "focus"); beep("ok"); toast("⏱️ C’est parti pour "+tv[1]+" minutes"); }
+      else if(tv[0] === "pause"){ tmPause(); beep("sel"); }
+      else { tmStop(); beep("back"); }
+      render(); break;
+    case "moves": closeModal(); movesModal(); break;
+    case "movestart": closeModal(); tmStart(1, "move"); beep("ok"); if(screen === "focus" || screen === "home") render(); else go("focus"); break;
+    case "tstart":
+      var tt0 = null; TASK_TYPES.forEach(function(x){ if(x.id===v) tt0 = x; });
+      p.task = {e:tt0.e, t:tt0.t, steps:tt0.s.map(function(x){ return {t:x, done:false}; }), d:today()};
+      save(); beep("ok"); toast("Trois petites étapes. Commence par la première !"); render(); break;
+    case "tcustom":
+      var tc = ($("tcustom").value || "").replace(/^\s+|\s+$/g, "");
+      if(!tc){ beep("err"); return; }
+      p.task = {e:"🎯", t:tc, steps:GENERIC_STEPS.map(function(x){ return {t:x, done:false}; }), d:today()};
+      save(); beep("ok"); render(); break;
+    case "tstep":
+      if(!p.task) return;
+      var ts = p.task.steps[+v]; if(!ts || ts.done) return;
+      ts.done = true;
+      var tall = true; p.task.steps.forEach(function(x){ if(!x.done) tall = false; });
+      var dt = daily(p);
+      if(tall){
+        p.st.t++; dt.starts = (dt.starts||0) + 1; beep("lvl");
+        p.task = null;
+        if(dt.starts <= 3) gain(p, 10, 3, "Tâche terminée : tu t’es lancé·e !"); else { markDay(p); save(); checkTrophies(p); toast("Tâche terminée !"); }
+      } else {
+        beep("ok");
+        if((dt.starts||0) < 3) gain(p, 2, 0, "Étape faite"); else save();
+      }
+      render(); break;
+    case "tquit": p.task = null; save(); beep("back"); toast("Pas grave, on choisit autre chose."); render(); break;
+    case "rtick":
+      var rv = v.split("|"), rs = routineState(p), rid = rv[0], ri = +rv[1];
+      if(!rs.c[rid]) rs.c[rid] = [];
+      rs.c[rid][ri] = !rs.c[rid][ri];
+      var rr = null; ROUTINES.forEach(function(x){ if(x.id===rid) rr = x; });
+      var full = true; rr.items.forEach(function(x, i){ if(!rs.c[rid][i]) full = false; });
+      beep("sel");
+      if(full && !rs.c[rid+"_ok"]){ rs.c[rid+"_ok"] = true; p.st.rt++; gain(p, 5, 2, "Routine complète !"); } else save();
+      render(); break;
+
+    case "setav":
+      var av = null; AVATARS.forEach(function(x){ if(x.e===v) av = x; });
+      if(av.lv > p.best){ beep("err"); toast("🔒 Se débloque au niveau "+av.lv); return; }
+      p.av = v; save(); beep("sel"); render(); break;
+    case "setth":
+      var th = theme(v);
+      if(th.lv > p.best){ beep("err"); toast("🔒 Se débloque au niveau "+th.lv); return; }
+      p.th = v; save(); beep("sel"); render(); break;
+    case "setfr":
+    case "setwp":
+      var pool = a === "setfr" ? FRAMES : WALLS, it = null;
+      pool.forEach(function(x){ if(x.id===v) it = x; });
+      if(!it) return;
+      if(it.lv > p.best){ beep("err"); toast("🔒 Se débloque au niveau "+it.lv); return; }
+      if(a === "setfr") p.fr = v; else p.wp = v;
+      save(); beep("sel"); render(); break;
+    case "route": showRoute = !showRoute; beep("sel"); render(); break;
+    case "rename":
+      var rn = ($("rename").value || "").replace(/^\s+|\s+$/g, "");
+      if(!rn){ beep("err"); return; }
+      p.name = rn; save(); toast("Pseudo modifié"); render(); break;
+
+    case "mood":
+      var md = daily(p), found = false;
+      p.moods.forEach(function(m){ if(m.d===today()){ m.m = v; found = true; } });
+      if(!found){ p.moods.push({d:today(), m:v}); if(p.moods.length > 120) p.moods.shift(); }
+      beep("sel");
+      if(!md.mood){ md.mood = true; gain(p, 2, 0, "Merci d’avoir partagé ta météo"); } else save();
+      render(); break;
+
+    case "set":
+      var sp = v.split("|"), key = sp[0], val2 = sp[1];
+      S.settings[key] = key === "size" ? +val2 : val2; save(); beep("sel"); render(); break;
+    case "tog":
+      S.settings[v] = !S.settings[v]; save(); beep("sel"); render(); break;
+
+    case "pin":
+      if(pinBuf.length >= 4) return;
+      pinBuf += v; beep("sel");
+      if(pinBuf.length === 4){
+        if(pinBuf === S.teacher.pin){ tUnlocked = true; tSel = S.cur; beep("ok"); }
+        else { beep("err"); toast("Code incorrect"); }
+        pinBuf = "";
+      }
+      render(); break;
+    case "pinc": pinBuf = pinBuf.slice(0, -1); render(); break;
+    case "lock": tUnlocked = false; pinBuf = ""; go("home"); break;
+    case "tsel": tSel = v; render(); break;
+    case "tgive":
+      var q = byId(tSel); if(!q) return;
+      var gv = v.split("|"), msg = ($("tmsg").value || "").replace(/^\s+|\s+$/g, "");
+      if(!msg && gv[0]==="0" && gv[1]==="0"){ toast("Écrivez un message"); return; }
+      var txt = msg || "Bravo pour tes efforts !";
+      if(+gv[0] || +gv[1]) txt += " (+"+(+gv[0] ? gv[0]+" XP" : "")+(+gv[0] && +gv[1] ? ", +" : "")+(+gv[1] ? gv[1]+" 💎" : "")+")";
+      var before = level(q.xp);
+      q.xp += +gv[0]; q.gems += +gv[1];
+      var linfo = applyLevels(q, before);
+      if(linfo) txt += " Niveau "+linfo.to+" atteint, coffre +"+linfo.chest+" 💎 !";
+      q.inbox.push({d:today(), t:txt});
+      save(); checkTrophies(q);
+      beep("ok"); toast("Envoyé à "+q.name);
+      render(); break;
+    case "smode":
+      S.teacher.seasonMode = v;
+      var nk = seasonInfo();
+      S.profiles.forEach(function(x){ x.season = nk.key; x.seasonLabel = nk.label; });
+      save(); beep("sel"); toast("Rythme des saisons : "+v); render(); break;
+    case "newseason":
+      confirmBox("Lancer une nouvelle saison ?", "Le niveau de tous les élèves repartira à 1 à leur prochaine connexion. Ils gardent gemmes, trophées et éléments débloqués.", "newseasonok", "", true); break;
+    case "newseasonok":
+      S.teacher.manualN = (S.teacher.manualN || 0) + 1; save(); closeModal();
+      toast("Nouvelle saison lancée"); render(); break;
+    case "setpin":
+      var np2 = ($("newpin").value || "");
+      if(!/^\d{4}$/.test(np2)){ beep("err"); toast("Le code doit contenir 4 chiffres"); return; }
+      S.teacher.pin = np2; save(); toast("Code prof modifié"); render(); break;
+    case "export":
+      var data = JSON.stringify(S);
+      modal('<h2>Copier la sauvegarde</h2><p class="note" style="margin-top:0">Copiez tout ce texte et collez-le sur l’autre appareil (Espace prof › Coller une sauvegarde).</p>'+
+        '<textarea class="field" id="exp" readonly style="min-height:160px;font-size:.75rem">'+esc(data)+'</textarea><p><button class="btn" data-a="copy">Copier</button></p>');
+      break;
+    case "copy":
+      var ta = $("exp"); ta.focus(); ta.select();
+      var done = false;
+      try{ done = document.execCommand("copy"); }catch(e){}
+      if(!done && navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(function(){ toast("Sauvegarde copiée"); }, function(){ toast("Sélectionnez le texte et copiez-le"); }); }
+      else toast(done ? "Sauvegarde copiée" : "Sélectionnez le texte et copiez-le");
+      break;
+    case "import":
+      modal('<h2>Coller une sauvegarde</h2><p class="note" style="margin-top:0">Attention : cela remplace toutes les données de cet appareil.</p>'+
+        '<textarea class="field" id="imp" style="min-height:160px;font-size:.75rem" placeholder="Collez la sauvegarde ici"></textarea><p><button class="btn l" data-a="importok">Remplacer les données</button></p>');
+      break;
+    case "importok":
+      try{
+        var o = JSON.parse($("imp").value);
+        if(!o || !o.profiles || !o.teacher) throw new Error("x");
+        localStorage.setItem(KEY, JSON.stringify(o));
+        S = load(); checkSeason(cur()); tUnlocked = false; closeModal(); toast("Sauvegarde importée"); screen = cur() ? "home" : "who"; render();
+      }catch(e){ beep("err"); toast("Ce texte n’est pas une sauvegarde Boost valide"); }
+      break;
+    case "delp":
+      var dp = byId(v);
+      confirmBox("Supprimer le profil de "+dp.name+" ?", "Toutes ses missions, victoires et progrès seront effacés de cet appareil.", "delpok", v, true); break;
+    case "delpok":
+      S.profiles = S.profiles.filter(function(x){ return x.id !== v; });
+      if(S.cur === v){ S.cur = null; }
+      tSel = S.cur; save(); closeModal(); toast("Profil supprimé");
+      if(!S.cur){ tUnlocked = false; go("who"); } else render();
+      break;
+  }
+}
+function logNeed(p, id){
+  p.needsLog.push({d:today(), id:id}); if(p.needsLog.length > 300) p.needsLog.shift();
+  p.st.n++;
+  var d = daily(p); d.needs = (d.needs||0) + 1;
+  beep("ok");
+  if(d.needs <= 3) gain(p, 6, 2, "Bravo d’avoir osé !"); else { markDay(p); save(); checkTrophies(p); }
+}
+function confirmBox(title, txt, okAction, v, danger){
+  modal('<h2>'+esc(title)+'</h2><p>'+esc(txt)+'</p><p class="row"><button class="btn ghost" data-a="close">Annuler</button>'+
+    '<button class="btn'+(danger?' l':'')+'" data-a="'+okAction+'" data-v="'+esc(v)+'">Confirmer</button></p>');
+}
+
+/* =================== Événements =================== */
+document.addEventListener("click", function(e){
+  var t = closest(e.target, "[data-a]");
+  if(!t) return;
+  var a = t.getAttribute("data-a");
+  if(a === "bg" && e.target !== t) return;
+  if(a === "bg"){ closeModal(); return; }
+  if(t.disabled) return;
+  act(a, t.getAttribute("data-v"), t);
+});
+document.addEventListener("mousedown", function(){ kbd = false; });
+document.addEventListener("touchstart", function(){ kbd = false; }, {passive:true});
+document.addEventListener("focusin", function(e){
+  var t = closest(e.target, ".tile");
+  if(t && screen === "home"){ setTile(+t.getAttribute("data-i"), false); }
+});
+document.addEventListener("mouseover", function(e){
+  var t = closest(e.target, ".tile");
+  if(t && screen === "home" && !kbd){ setTile(+t.getAttribute("data-i"), false); }
+});
+document.addEventListener("keydown", function(e){
+  kbd = true;
+  var tag = (e.target.tagName || "").toLowerCase(), typing = tag === "input" || tag === "textarea";
+  if(document.querySelector(".boot") && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); act("boot"); return; }
+  if(e.key === "Escape" || (!typing && (e.key === "b" || e.key === "B" || e.key === "Backspace"))){
+    if($("modal").innerHTML){ closeModal(); e.preventDefault(); return; }
+    if(screen === "prof" && !tUnlocked && e.key === "Backspace"){ act("pinc"); e.preventDefault(); return; }
+    if(screen !== "home" && screen !== "who" && screen !== "boot" && cur()){ e.preventDefault(); act("home"); }
+    return;
+  }
+  if(typing) return;
+  if(screen === "prof" && !tUnlocked && /^[0-9]$/.test(e.key)){ act("pin", e.key); return; }
+  if((e.key === "a" || e.key === "A") && document.activeElement && document.activeElement !== document.body){ document.activeElement.click(); return; }
+  if(screen !== "home" || $("modal").innerHTML) return;
+  var inTiles = closest(document.activeElement, "#tiles"), inR = closest(document.activeElement, "#rbtns");
+  if(e.key === "ArrowRight" || e.key === "ArrowLeft"){
+    var dir = e.key === "ArrowRight" ? 1 : -1;
+    if(inR){
+      var rb = document.querySelectorAll(".rbtn"), ri = +document.activeElement.getAttribute("data-r");
+      rb[(ri + dir + rb.length) % rb.length].focus();
+    } else setTile(homeIdx + dir, true);
+    e.preventDefault();
+  } else if(e.key === "ArrowDown" && !inR){
+    document.querySelector(".rbtn").focus(); e.preventDefault();
+  } else if(e.key === "ArrowUp" && inR){
+    setTile(homeIdx, true); e.preventDefault();
+  } else if(e.key === "ArrowDown" && inTiles === null && !inR){
+    setTile(homeIdx, true); e.preventDefault();
+  }
+});
+setInterval(function(){ var c = $("clock"); if(c) c.textContent = clockTxt(); }, 20000);
+
+/* =================== Démarrage =================== */
+S = load();
+if(S.cur && !cur()) S.cur = null;
+checkSeason(cur());
+applySettings();
+render();
+})();
+</script>
+</body>
+</html>
