@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Boost — ma console de progrès</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Boost">
+<meta name="theme-color" content="#1f1f23">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2213%22%20fill%3D%22%23e9e9eb%22%2F%3E%3Crect%20x%3D%227%22%20y%3D%2215%22%20width%3D%2250%22%20height%3D%2234%22%20rx%3D%2212%22%20fill%3D%22%231f1f23%22%2F%3E%3Crect%20x%3D%2220%22%20y%3D%2219%22%20width%3D%2224%22%20height%3D%2226%22%20rx%3D%224%22%20fill%3D%22%2333353e%22%2F%3E%3Crect%20x%3D%2223%22%20y%3D%2222%22%20width%3D%2218%22%20height%3D%2220%22%20rx%3D%222%22%20fill%3D%22%239be8f1%22%2F%3E%3Cpath%20d%3D%22M12%2027h11M17.5%2021.5v11%22%20stroke%3D%22%23ff4554%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2228%22%20r%3D%223%22%20fill%3D%22%2300c3e3%22%2F%3E%3Ccircle%20cx%3D%2252%22%20cy%3D%2235%22%20r%3D%223%22%20fill%3D%22%2300c3e3%22%2F%3E%3Cpath%20d%3D%22M27%2034l4-5%203%203%203-6%22%20fill%3D%22none%22%20stroke%3D%22%23262629%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -321,6 +325,64 @@ body.calm .grip{filter:saturate(.45)}
 body.calm .tile.on{animation:none}
 .flag{color:var(--jl);font-weight:600}
 
+/* ---------- Ajouts : aides prévues, carte levée, fiertés, radar ---------- */
+.need.planned{border:2px solid var(--ok);background:linear-gradient(180deg,var(--surface),var(--surface2))}
+.ptag{font:600 .7rem var(--display);color:var(--ok);margin-top:4px}
+.ptag2{display:inline-block;font:600 .7rem var(--display);background:var(--warn);color:#2a1d00;border-radius:999px;padding:1px 8px;margin-right:4px}
+.mission.prof{border-left-color:var(--warn)}
+.planline{font-size:.95rem!important;background:rgba(255,255,255,.2);border-radius:999px;display:inline-block;padding:3px 12px}
+.bigcard .hint2{display:none}
+.modal.raised{padding:0;background:var(--bezel)}
+.modal.raised .box{max-width:none;height:100%;max-height:none;border-radius:0;padding:0;display:flex;background:transparent}
+.modal.raised .box > :not(.bigcard){display:none}
+.modal.raised .bigcard{flex:1;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+  padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px))}
+.modal.raised .bigcard .e{font-size:min(30vw,180px)}
+.modal.raised .bigcard h3{font-size:clamp(2rem,7vw,4.2rem)}
+.modal.raised .bigcard p{font-size:clamp(1.2rem,3.6vw,2rem);max-width:30ch}
+.modal.raised .bigcard .hint1{display:none}
+.modal.raised .bigcard .hint2{display:block;margin-top:18px;opacity:.75}
+.bigcard.pride{background:linear-gradient(150deg,#f2a900,#ff7a00)}
+.pridecard{border:2px solid var(--warn)}
+.radarcard{text-align:center}
+.radar{width:100%;max-width:360px;height:auto;display:block;margin:0 auto}
+.legend{display:flex;justify-content:center;gap:18px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:0;vertical-align:middle;margin-right:6px}
+.legend .lg1{border-top:2px dashed var(--muted)}
+.legend .lg2{border-top:4px solid var(--jr)}
+.jr{font-size:1.2rem;white-space:nowrap}
+.warnbox{border:2px solid var(--warn)}
+#print{display:none}
+
+/* ---------- Impression de la fiche bilan ---------- */
+@media print{
+  @page{size:A4;margin:14mm}
+  html,body{height:auto;overflow:visible;background:#fff!important;color:#111}
+  :root{padding:0}
+  .shell,#modal,.toasts,.boot{display:none!important}
+  #print{display:block;font:10.5pt/1.45 var(--body);color:#111}
+  #print h1{font:600 20pt var(--display);margin:0}
+  #print h2{font:600 12pt var(--display);margin:12px 0 4px;border-bottom:1.5px solid #ccc;padding-bottom:2px;break-after:avoid}
+  #print p,#print ul{margin:4px 0}
+  #print ul{padding-left:18px}
+  .pr-head{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #222;padding-bottom:6px}
+  .pr-head p{margin:2px 0 0;font-size:12pt}
+  .pr-av{font-size:38pt}
+  .pr-note{font-size:9pt;color:#555}
+  .pr-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:8px 0}
+  .pr-stats div{border:1px solid #bbb;border-radius:6px;padding:5px;text-align:center;font-size:8.5pt}
+  .pr-stats b{display:block;font:600 15pt var(--display)}
+  .pr-cols{display:flex;gap:12px;align-items:flex-start;break-inside:avoid}
+  .pr-cols > div:first-child{flex:1.5}
+  .pr-radar{flex:1}
+  .pr-radar .radar{max-width:250px}
+  #print table{width:100%;border-collapse:collapse;font-size:9pt}
+  #print th,#print td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top}
+  #print td.c{text-align:center;font-size:12pt}
+  #print small{color:#666}
+  .pr-lines{border-bottom:1px solid #999;height:22px}
+}
+
 body.nomotion *,body.nomotion *:before,body.nomotion *:after{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
@@ -334,149 +396,130 @@ body.nomotion *,body.nomotion *:before,body.nomotion *:after{animation:none!impo
 <div id="modal"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script>
-(function(){
-"use strict";
-var KEY = "boost_pap_v1";
-
-/* =================== Données =================== */
-var NEEDS = [
-  {id:"temps", e:"⏳", t:"Plus de temps", m:"J’ai besoin d’un peu plus de temps pour finir."},
-  {id:"relire", e:"🔁", t:"Qu’on me relise la consigne", m:"Peux-tu me relire la consigne, s’il te plaît ?"},
-  {id:"decouper", e:"🪜", t:"La consigne en petites étapes", m:"J’ai besoin que la consigne soit découpée en étapes."},
-  {id:"exemple", e:"💡", t:"Un exemple", m:"Est-ce que je peux avoir un exemple ?"},
-  {id:"verifier", e:"👀", t:"Vérifier que j’ai compris", m:"Peux-tu vérifier que j’ai bien compris avant que je commence ?"},
-  {id:"agrandir", e:"🔍", t:"Un texte plus grand", m:"J’ai besoin d’un document agrandi ou plus aéré."},
-  {id:"outil", e:"🧰", t:"Ma fiche outil", m:"Est-ce que je peux utiliser ma fiche outil ?"},
-  {id:"calcul", e:"🧮", t:"La calculatrice", m:"J’ai besoin de ma calculatrice."},
-  {id:"oral", e:"🎤", t:"Répondre à l’oral", m:"Est-ce que je peux te répondre à l’oral plutôt qu’à l’écrit ?"},
-  {id:"moins", e:"✂️", t:"Moins d’exercices", m:"Est-ce que je peux faire seulement une partie des exercices ?"},
-  {id:"pause", e:"🌿", t:"Une petite pause", m:"J’ai besoin d’une courte pause pour me reconcentrer."},
-  {id:"place", e:"🪑", t:"Changer de place", m:"J’ai besoin de changer de place pour mieux me concentrer."},
-  {id:"calme", e:"🎧", t:"Du calme", m:"Il y a trop de bruit pour moi, j’ai besoin de calme."},
-  {id:"bouger", e:"🤸", t:"Bouger un peu", m:"J’ai besoin de bouger un peu pour me reconcentrer. Est-ce que je peux ?"},
-  {id:"parler", e:"💬", t:"Te parler après le cours", m:"J’aimerais te parler quelques minutes après le cours."}
-];
-var SKILLS = [
-  {id:"consigne", e:"📋", t:"Comprendre une consigne"},
-  {id:"organiser", e:"🎒", t:"M’organiser"},
-  {id:"concentrer", e:"🎯", t:"Me concentrer"},
-  {id:"lire", e:"📖", t:"Lire un texte"},
-  {id:"ecrire", e:"✏️", t:"Écrire"},
-  {id:"parler", e:"🗣️", t:"Parler devant les autres"},
-  {id:"aide", e:"🙋", t:"Demander de l’aide"},
-  {id:"stress", e:"🫧", t:"Gérer mon stress"},
-  {id:"memoriser", e:"🧠", t:"Mémoriser une leçon"}
-];
-var RATES = ["", "C’est difficile pour moi", "Je commence à y arriver", "Ça va bien", "Je gère !"];
-var RATE_E = ["", "🌱", "🌿", "🌳", "🏔️"];
-var SUGG = [
-  {e:"🙋", t:"J’ai demandé de l’aide quand j’étais bloqué·e"},
-  {e:"📝", t:"J’ai noté mes devoirs dans mon agenda"},
-  {e:"✅", t:"J’ai fini un exercice en entier"},
-  {e:"🧰", t:"J’ai utilisé mon outil (fiche, calculatrice…)"},
-  {e:"🔎", t:"J’ai relu mon travail avant de le rendre"},
-  {e:"🗣️", t:"J’ai participé à l’oral une fois"},
-  {e:"🎒", t:"J’ai préparé mon sac la veille"},
-  {e:"🌿", t:"J’ai fait une pause quand j’en avais besoin"},
-  {e:"📖", t:"J’ai relu ma leçon 10 minutes"},
-  {e:"🧘", t:"J’ai respiré calmement avant une évaluation"}
-];
-var WIN_PROMPTS = ["Aujourd’hui, j’ai osé…", "J’ai réussi à…", "Je suis fier·e de…", "C’était difficile mais…", "Mon prof m’a dit…"];
-var MOODS = [
-  {id:"soleil", e:"☀️", t:"Grand soleil"},
-  {id:"nuage", e:"⛅", t:"Quelques nuages"},
-  {id:"pluie", e:"🌧️", t:"Il pleut un peu"},
-  {id:"orage", e:"⛈️", t:"Orage dans ma tête"}
-];
-var MAXL = 20;
-var THEMES = [
-  {id:"neon", n:"Néon", l:"#ff4554", r:"#00c3e3", lv:1},
-  {id:"menthe", n:"Menthe & corail", l:"#ff7a59", r:"#14b88f", lv:2},
-  {id:"pop", n:"Violet & jaune", l:"#8b5cf6", r:"#e0a800", lv:6},
-  {id:"ocean", n:"Océan", l:"#2563eb", r:"#0eb5d6", lv:10},
-  {id:"foret", n:"Forêt", l:"#2d9b4e", r:"#8fb82f", lv:13},
-  {id:"lave", n:"Lave", l:"#e5383b", r:"#f77f00", lv:14},
-  {id:"galaxie", n:"Nébuleuse", l:"#7c3aed", r:"#ec4899", lv:18},
-  {id:"or", n:"Or légendaire", l:"#c99700", r:"#8a6d1d", lv:20}
-];
-var AVATARS = [
-  {e:"🦊",lv:1},{e:"🐼",lv:1},{e:"🐸",lv:1},{e:"🐱",lv:1},{e:"🐶",lv:1},{e:"🐯",lv:1},{e:"🐙",lv:1},{e:"🦉",lv:1},
-  {e:"🦄",lv:3},{e:"🐲",lv:7},{e:"👾",lv:10},{e:"🦖",lv:11},{e:"🤖",lv:15},{e:"🦸",lv:15},{e:"🧙",lv:19},{e:"👑",lv:20}
-];
-var FRAMES = [
-  {id:"none", n:"Simple", lv:1}, {id:"etoiles", n:"Étoiles", lv:4}, {id:"feu", n:"Feu", lv:8},
-  {id:"arc", n:"Arc-en-ciel", lv:12}, {id:"or", n:"Or", lv:16}
-];
-var WALLS = [
-  {id:"none", n:"Uni", lv:1}, {id:"nuages", n:"Nuages", lv:5}, {id:"pixels", n:"Pixels", lv:9},
-  {id:"ciel", n:"Ciel étoilé", lv:13}, {id:"vagues", n:"Vagues", lv:17}
-];
-var LEVEL_NAMES = ["", "Apprenti·e","Apprenti·e","Explorateur·rice","Explorateur·rice","Aventurier·e","Aventurier·e","Stratège","Stratège",
-  "Champion·ne","Champion·ne","Expert·e","Expert·e","Maître du jeu","Maître du jeu","Héros·ïne","Héros·ïne","Légende","Légende","Légende vivante","Boss final"];
-var SHOP = [
-  {id:"gel", cat:"power", e:"🧊", n:"Gel de série", d:"Protège ta série si tu manques un jour de classe. Il s’utilise tout seul.", c:30, lv:1},
-  {id:"dbl", cat:"power", e:"⚡", n:"Double XP du jour", d:"Tous tes XP comptent double jusqu’à ce soir.", c:50, lv:1},
-  {id:"h-noeud", cat:"hat", e:"🎀", n:"Nœud", c:40, lv:1},
-  {id:"h-casq", cat:"hat", e:"🧢", n:"Casquette", c:40, lv:1},
-  {id:"h-paille", cat:"hat", e:"👒", n:"Chapeau de paille", c:60, lv:1},
-  {id:"h-haut", cat:"hat", e:"🎩", n:"Haut-de-forme", c:80, lv:3},
-  {id:"h-toque", cat:"hat", e:"🎓", n:"Toque de diplômé·e", c:100, lv:6},
-  {id:"h-couronne", cat:"hat", e:"👑", n:"Couronne", c:250, lv:15},
-  {id:"o-ballon", cat:"obj", e:"🎈", n:"Ballon", c:30, lv:1},
-  {id:"o-foot", cat:"obj", e:"⚽", n:"Ballon de foot", c:40, lv:1},
-  {id:"o-livre", cat:"obj", e:"📚", n:"Pile de livres", c:50, lv:1},
-  {id:"o-skate", cat:"obj", e:"🛹", n:"Skate", c:70, lv:4},
-  {id:"o-guitare", cat:"obj", e:"🎸", n:"Guitare", c:80, lv:5},
-  {id:"o-baguette", cat:"obj", e:"🪄", n:"Baguette magique", c:120, lv:10},
-  {id:"o-coupe", cat:"obj", e:"🏆", n:"Coupe des champions", c:200, lv:12},
-  {id:"d-plage", cat:"deco", e:"🏝️", n:"Plage", c:60, lv:1, bg:"linear-gradient(180deg,#7dd3fc 0%,#bae6fd 55%,#fde68a 56%,#fcd34d 100%)"},
-  {id:"d-foret", cat:"deco", e:"🌲", n:"Forêt", c:60, lv:1, bg:"linear-gradient(180deg,#a7f3d0 0%,#6ee7b7 60%,#15803d 61%,#166534 100%)"},
-  {id:"d-montagne", cat:"deco", e:"🏔️", n:"Montagne", c:80, lv:2, bg:"linear-gradient(180deg,#c7d2fe 0%,#e0e7ff 60%,#94a3b8 61%,#64748b 100%)"},
-  {id:"d-espace", cat:"deco", e:"🪐", n:"Espace", c:120, lv:6, bg:"radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 65%,#fff,transparent),radial-gradient(2px 2px at 85% 75%,#fff,transparent),linear-gradient(160deg,#1e1b4b,#4c1d95)"},
-  {id:"d-chateau", cat:"deco", e:"🏰", n:"Château", c:150, lv:8, bg:"linear-gradient(180deg,#fbcfe8 0%,#f5d0fe 60%,#a78bfa 61%,#7c3aed 100%)"},
-  {id:"d-volcan", cat:"deco", e:"🌋", n:"Volcan", c:150, lv:11, bg:"linear-gradient(180deg,#fecaca 0%,#fdba74 55%,#7c2d12 56%,#431407 100%)"}
-];
-var SHOP_CATS = [
-  {id:"power", t:"Pouvoirs"}, {id:"hat", t:"Chapeaux"}, {id:"obj", t:"Objets"}, {id:"deco", t:"Décors"}
-];
-var SPECIES = [
-  {id:"oiseau", n:"Oiseau", st:["🥚","🐣","🐥","🦅"]},
-  {id:"dragon", n:"Dragon", st:["🥚","🦎","🐲","🐉"]},
-  {id:"marin", n:"Créature marine", st:["🥚","🐟","🐬","🐳"]},
-  {id:"plante", n:"Plante magique", st:["🌰","🌱","🌿","🌳"]}
-];
-var STAGE_LV = [1, 3, 8, 14];
-var DIFF = {f:{n:"Facile", xp:6, g:3}, n:{n:"Normal", xp:10, g:5}, d:{n:"Défi", xp:15, g:8}};
-var TASK_TYPES = [
-  {id:"exo", e:"✏️", t:"Un exercice", s:["Je lis la consigne et je souligne ce qu’on me demande","Je fais seulement la première question","Je continue, une question à la fois, jusqu’au bout"]},
-  {id:"lecture", e:"📖", t:"Une lecture", s:["Je lis le titre et je regarde les images","Je lis le premier paragraphe","Je lis la suite et je note un mot important par paragraphe"]},
-  {id:"redac", e:"📝", t:"Une rédaction", s:["J’écris trois idées en mots-clés","J’écris ma première phrase","Je développe une idée à la fois, puis je relis"]},
-  {id:"lecon", e:"🧠", t:"Apprendre une leçon", s:["Je lis la leçon une fois en entier","Je cache la leçon et je redis les mots-clés","Je me pose 3 questions et j’y réponds sans regarder"]},
-  {id:"ranger", e:"🎒", t:"M’organiser", s:["Je sors tout ce qu’il y a dans mon sac","Je range ou je jette ce qui ne sert pas aujourd’hui","Je prépare ce qu’il faut pour le prochain cours"]}
-];
-var GENERIC_STEPS = ["Je prépare ce dont j’ai besoin","Je fais la première petite partie","Je continue jusqu’au bout"];
-var ROUTINES = [
-  {id:"debut", e:"🔔", t:"Début de cours", items:["Je sors mes affaires","J’écris la date et le titre","Je lis l’objectif de la séance"]},
-  {id:"fin", e:"🏁", t:"Fin de cours", items:["Je note les devoirs dans mon agenda","Je range mes affaires calmement","Je vérifie que je n’oublie rien"]},
-  {id:"sac", e:"🎒", t:"Mon sac pour demain", items:["Je regarde mon emploi du temps","Je mets les cahiers et les livres du jour","Agenda, trousse, carnet : c’est bon"]}
-];
-var MOVES = [
+<!-- Contenus pédagogiques : modifiables sans toucher au code (garder un JSON valide) -->
+<script type="application/json" id="boost-contenus">
+{
+ "needs": [
+  {"id": "temps", "e": "⏳", "t": "Plus de temps", "m": "J’ai besoin d’un peu plus de temps pour finir."},
+  {"id": "relire", "e": "🔁", "t": "Qu’on me relise la consigne", "m": "Peux-tu me relire la consigne, s’il te plaît ?"},
+  {"id": "decouper", "e": "🪜", "t": "La consigne en petites étapes", "m": "J’ai besoin que la consigne soit découpée en étapes."},
+  {"id": "exemple", "e": "💡", "t": "Un exemple", "m": "Est-ce que je peux avoir un exemple ?"},
+  {"id": "mot", "e": "📚", "t": "Qu’on m’explique un mot", "m": "Il y a un mot que je ne comprends pas. Peux-tu me l’expliquer ?"},
+  {"id": "verifier", "e": "👀", "t": "Vérifier que j’ai compris", "m": "Peux-tu vérifier que j’ai bien compris avant que je commence ?"},
+  {"id": "agrandir", "e": "🔍", "t": "Un texte plus grand", "m": "J’ai besoin d’un document agrandi ou plus aéré."},
+  {"id": "outil", "e": "🧰", "t": "Ma fiche outil", "m": "Est-ce que je peux utiliser ma fiche outil ?"},
+  {"id": "calcul", "e": "🧮", "t": "La calculatrice", "m": "J’ai besoin de ma calculatrice."},
+  {"id": "oral", "e": "🎤", "t": "Répondre à l’oral", "m": "Est-ce que je peux te répondre à l’oral plutôt qu’à l’écrit ?"},
+  {"id": "binome", "e": "🤝", "t": "Travailler avec quelqu’un", "m": "Est-ce que je peux travailler avec un ou une camarade ?"},
+  {"id": "moins", "e": "✂️", "t": "Moins d’exercices", "m": "Est-ce que je peux faire seulement une partie des exercices ?"},
+  {"id": "pause", "e": "🌿", "t": "Une petite pause", "m": "J’ai besoin d’une courte pause pour me reconcentrer."},
+  {"id": "place", "e": "🪑", "t": "Changer de place", "m": "J’ai besoin de changer de place pour mieux me concentrer."},
+  {"id": "calme", "e": "🎧", "t": "Du calme", "m": "Il y a trop de bruit pour moi, j’ai besoin de calme."},
+  {"id": "bouger", "e": "🤸", "t": "Bouger un peu", "m": "J’ai besoin de bouger un peu pour me reconcentrer. Est-ce que je peux ?"},
+  {"id": "parler", "e": "💬", "t": "Te parler après le cours", "m": "J’aimerais te parler quelques minutes après le cours."}
+ ],
+ "skills": [
+  {"id": "consigne", "e": "📋", "t": "Comprendre une consigne"},
+  {"id": "organiser", "e": "🎒", "t": "M’organiser"},
+  {"id": "concentrer", "e": "🎯", "t": "Me concentrer"},
+  {"id": "lire", "e": "📖", "t": "Lire un texte"},
+  {"id": "ecrire", "e": "✏️", "t": "Écrire"},
+  {"id": "parler", "e": "🗣️", "t": "Parler devant les autres"},
+  {"id": "aide", "e": "🙋", "t": "Demander de l’aide"},
+  {"id": "stress", "e": "🫧", "t": "Gérer mon stress"},
+  {"id": "memoriser", "e": "🧠", "t": "Mémoriser une leçon"}
+ ],
+ "rates": [
+  "",
+  "C’est difficile pour moi",
+  "Je commence à y arriver",
+  "Ça va bien",
+  "Je gère !"
+ ],
+ "rateIcons": [
+  "",
+  "🌱",
+  "🌿",
+  "🌳",
+  "🏔️"
+ ],
+ "missionIdeas": [
+  {"e": "🙋", "t": "J’ai demandé de l’aide quand j’étais bloqué·e"},
+  {"e": "📝", "t": "J’ai noté mes devoirs dans mon agenda"},
+  {"e": "✅", "t": "J’ai fini un exercice en entier"},
+  {"e": "🧰", "t": "J’ai utilisé mon outil (fiche, calculatrice…)"},
+  {"e": "🔎", "t": "J’ai relu mon travail avant de le rendre"},
+  {"e": "🗣️", "t": "J’ai participé à l’oral une fois"},
+  {"e": "🎒", "t": "J’ai préparé mon sac la veille"},
+  {"e": "🌿", "t": "J’ai fait une pause quand j’en avais besoin"},
+  {"e": "📖", "t": "J’ai relu ma leçon 10 minutes"},
+  {"e": "🧘", "t": "J’ai respiré calmement avant une évaluation"}
+ ],
+ "moods": [
+  {"id": "soleil", "e": "☀️", "t": "Grand soleil"},
+  {"id": "nuage", "e": "⛅", "t": "Quelques nuages"},
+  {"id": "pluie", "e": "🌧️", "t": "Il pleut un peu"},
+  {"id": "orage", "e": "⛈️", "t": "Orage dans ma tête"}
+ ],
+ "taskTypes": [
+  {"id": "exo", "e": "✏️", "t": "Un exercice", "s": ["Je lis la consigne et je souligne ce qu’on me demande", "Je fais seulement la première question", "Je continue, une question à la fois, jusqu’au bout"]},
+  {"id": "lecture", "e": "📖", "t": "Une lecture", "s": ["Je lis le titre et je regarde les images", "Je lis le premier paragraphe", "Je lis la suite et je note un mot important par paragraphe"]},
+  {"id": "redac", "e": "📝", "t": "Une rédaction", "s": ["J’écris trois idées en mots-clés", "J’écris ma première phrase", "Je développe une idée à la fois, puis je relis"]},
+  {"id": "lecon", "e": "🧠", "t": "Apprendre une leçon", "s": ["Je lis la leçon une fois en entier", "Je cache la leçon et je redis les mots-clés", "Je me pose 3 questions et j’y réponds sans regarder"]},
+  {"id": "ranger", "e": "🎒", "t": "M’organiser", "s": ["Je sors tout ce qu’il y a dans mon sac", "Je range ou je jette ce qui ne sert pas aujourd’hui", "Je prépare ce qu’il faut pour le prochain cours"]}
+ ],
+ "genericSteps": [
+  "Je prépare ce dont j’ai besoin",
+  "Je fais la première petite partie",
+  "Je continue jusqu’au bout"
+ ],
+ "routines": [
+  {"id": "debut", "e": "🔔", "t": "Début de cours", "items": ["Je sors mes affaires", "J’écris la date et le titre", "Je lis l’objectif de la séance"]},
+  {"id": "fin", "e": "🏁", "t": "Fin de cours", "items": ["Je note les devoirs dans mon agenda", "Je range mes affaires calmement", "Je vérifie que je n’oublie rien"]},
+  {"id": "sac", "e": "🎒", "t": "Mon sac pour demain", "items": ["Je regarde mon emploi du temps", "Je mets les cahiers et les livres du jour", "Agenda, trousse, carnet : c’est bon"]}
+ ],
+ "moves": [
   "Serre fort tes poings 5 secondes, puis relâche. Trois fois.",
   "Pousse tes paumes l’une contre l’autre pendant 5 secondes.",
   "Roule tes épaules lentement vers l’arrière, cinq fois.",
   "Appuie tes pieds bien à plat sur le sol, puis relâche.",
   "Étire tes doigts en grand, puis ferme doucement les mains.",
   "Inspire par le nez en comptant jusqu’à 4, souffle en comptant jusqu’à 6."
-];
-var WIN_WHAT = [
-  {e:"🎯", t:"J’ai fini un travail"}, {e:"🙋", t:"J’ai osé participer"}, {e:"🤝", t:"J’ai aidé quelqu’un"},
-  {e:"📈", t:"J’ai progressé"}, {e:"🧘", t:"Je suis resté·e calme"}, {e:"💡", t:"J’ai compris quelque chose"}
-];
-var WIN_SUBJ = ["Français","Maths","Anglais","Histoire-géo","SVT","Physique-chimie","Techno","Arts plastiques","Musique","EPS","Autre langue","Vie de classe"];
-var WIN_FEEL = [{e:"😊", t:"fier·e"}, {e:"😌", t:"soulagé·e"}, {e:"🤩", t:"content·e"}, {e:"💪", t:"plus fort·e"}];
-var GOAL_WHEN = ["Cette semaine", "Ce mois-ci", "Avant les vacances"];
-var PHRASES = [
+ ],
+ "winWhat": [
+  {"e": "🎯", "t": "J’ai fini un travail"},
+  {"e": "🙋", "t": "J’ai osé participer"},
+  {"e": "🤝", "t": "J’ai aidé quelqu’un"},
+  {"e": "📈", "t": "J’ai progressé"},
+  {"e": "🧘", "t": "Je suis resté·e calme"},
+  {"e": "💡", "t": "J’ai compris quelque chose"}
+ ],
+ "winSubjects": [
+  "Français",
+  "Maths",
+  "Anglais",
+  "Histoire-géo",
+  "SVT",
+  "Physique-chimie",
+  "Techno",
+  "Arts plastiques",
+  "Musique",
+  "EPS",
+  "Autre langue",
+  "Vie de classe"
+ ],
+ "winFeel": [
+  {"e": "😊", "t": "fier·e"},
+  {"e": "😌", "t": "soulagé·e"},
+  {"e": "🤩", "t": "content·e"},
+  {"e": "💪", "t": "plus fort·e"}
+ ],
+ "goalWhen": [
+  "Cette semaine",
+  "Ce mois-ci",
+  "Avant les vacances"
+ ],
+ "phrases": [
   "Tu as trouvé une bonne stratégie, garde-la !",
   "Ce n’est pas la vitesse qui compte, c’est d’avancer.",
   "Découper en petites étapes, c’est malin.",
@@ -491,7 +534,135 @@ var PHRASES = [
   "Tu as le droit d’avoir besoin de temps.",
   "Ton cerveau grandit à chaque effort.",
   "On fait équipe, toi et moi !"
-];
+ ]
+}
+</script>
+<!-- Réglages du jeu : thèmes, avatars, boutique, compagnons -->
+<script type="application/json" id="boost-jeu">
+{
+ "maxLevel": 20,
+ "themes": [
+  {"id": "neon", "n": "Néon", "l": "#ff4554", "r": "#00c3e3", "lv": 1},
+  {"id": "menthe", "n": "Menthe & corail", "l": "#ff7a59", "r": "#14b88f", "lv": 2},
+  {"id": "pop", "n": "Violet & jaune", "l": "#8b5cf6", "r": "#e0a800", "lv": 6},
+  {"id": "ocean", "n": "Océan", "l": "#2563eb", "r": "#0eb5d6", "lv": 10},
+  {"id": "foret", "n": "Forêt", "l": "#2d9b4e", "r": "#8fb82f", "lv": 13},
+  {"id": "lave", "n": "Lave", "l": "#e5383b", "r": "#f77f00", "lv": 14},
+  {"id": "galaxie", "n": "Nébuleuse", "l": "#7c3aed", "r": "#ec4899", "lv": 18},
+  {"id": "or", "n": "Or légendaire", "l": "#c99700", "r": "#8a6d1d", "lv": 20}
+ ],
+ "avatars": [
+  {"e": "🦊", "lv": 1},
+  {"e": "🐼", "lv": 1},
+  {"e": "🐸", "lv": 1},
+  {"e": "🐱", "lv": 1},
+  {"e": "🐶", "lv": 1},
+  {"e": "🐯", "lv": 1},
+  {"e": "🐙", "lv": 1},
+  {"e": "🦉", "lv": 1},
+  {"e": "🦄", "lv": 3},
+  {"e": "🐲", "lv": 7},
+  {"e": "👾", "lv": 10},
+  {"e": "🦖", "lv": 11},
+  {"e": "🤖", "lv": 15},
+  {"e": "🦸", "lv": 15},
+  {"e": "🧙", "lv": 19},
+  {"e": "👑", "lv": 20}
+ ],
+ "frames": [
+  {"id": "none", "n": "Simple", "lv": 1},
+  {"id": "etoiles", "n": "Étoiles", "lv": 4},
+  {"id": "feu", "n": "Feu", "lv": 8},
+  {"id": "arc", "n": "Arc-en-ciel", "lv": 12},
+  {"id": "or", "n": "Or", "lv": 16}
+ ],
+ "walls": [
+  {"id": "none", "n": "Uni", "lv": 1},
+  {"id": "nuages", "n": "Nuages", "lv": 5},
+  {"id": "pixels", "n": "Pixels", "lv": 9},
+  {"id": "ciel", "n": "Ciel étoilé", "lv": 13},
+  {"id": "vagues", "n": "Vagues", "lv": 17}
+ ],
+ "levelNames": [
+  "",
+  "Apprenti·e",
+  "Apprenti·e",
+  "Explorateur·rice",
+  "Explorateur·rice",
+  "Aventurier·e",
+  "Aventurier·e",
+  "Stratège",
+  "Stratège",
+  "Champion·ne",
+  "Champion·ne",
+  "Expert·e",
+  "Expert·e",
+  "Maître du jeu",
+  "Maître du jeu",
+  "Héros·ïne",
+  "Héros·ïne",
+  "Légende",
+  "Légende",
+  "Légende vivante",
+  "Boss final"
+ ],
+ "shop": [
+  {"id": "gel", "cat": "power", "e": "🧊", "n": "Gel de série", "d": "Protège ta série si tu rates une séance. Il s’utilise tout seul.", "c": 30, "lv": 1},
+  {"id": "dbl", "cat": "power", "e": "⚡", "n": "Double XP du jour", "d": "Tous tes XP comptent double jusqu’à ce soir.", "c": 50, "lv": 1},
+  {"id": "h-noeud", "cat": "hat", "e": "🎀", "n": "Nœud", "c": 40, "lv": 1},
+  {"id": "h-casq", "cat": "hat", "e": "🧢", "n": "Casquette", "c": 40, "lv": 1},
+  {"id": "h-paille", "cat": "hat", "e": "👒", "n": "Chapeau de paille", "c": 60, "lv": 1},
+  {"id": "h-haut", "cat": "hat", "e": "🎩", "n": "Haut-de-forme", "c": 80, "lv": 3},
+  {"id": "h-toque", "cat": "hat", "e": "🎓", "n": "Toque de diplômé·e", "c": 100, "lv": 6},
+  {"id": "h-couronne", "cat": "hat", "e": "👑", "n": "Couronne", "c": 250, "lv": 15},
+  {"id": "o-ballon", "cat": "obj", "e": "🎈", "n": "Ballon", "c": 30, "lv": 1},
+  {"id": "o-foot", "cat": "obj", "e": "⚽", "n": "Ballon de foot", "c": 40, "lv": 1},
+  {"id": "o-livre", "cat": "obj", "e": "📚", "n": "Pile de livres", "c": 50, "lv": 1},
+  {"id": "o-skate", "cat": "obj", "e": "🛹", "n": "Skate", "c": 70, "lv": 4},
+  {"id": "o-guitare", "cat": "obj", "e": "🎸", "n": "Guitare", "c": 80, "lv": 5},
+  {"id": "o-baguette", "cat": "obj", "e": "🪄", "n": "Baguette magique", "c": 120, "lv": 10},
+  {"id": "o-coupe", "cat": "obj", "e": "🏆", "n": "Coupe des champions", "c": 200, "lv": 12},
+  {"id": "d-plage", "cat": "deco", "e": "🏝️", "n": "Plage", "c": 60, "lv": 1, "bg": "linear-gradient(180deg,#7dd3fc 0%,#bae6fd 55%,#fde68a 56%,#fcd34d 100%)"},
+  {"id": "d-foret", "cat": "deco", "e": "🌲", "n": "Forêt", "c": 60, "lv": 1, "bg": "linear-gradient(180deg,#a7f3d0 0%,#6ee7b7 60%,#15803d 61%,#166534 100%)"},
+  {"id": "d-montagne", "cat": "deco", "e": "🏔️", "n": "Montagne", "c": 80, "lv": 2, "bg": "linear-gradient(180deg,#c7d2fe 0%,#e0e7ff 60%,#94a3b8 61%,#64748b 100%)"},
+  {"id": "d-espace", "cat": "deco", "e": "🪐", "n": "Espace", "c": 120, "lv": 6, "bg": "radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 65%,#fff,transparent),radial-gradient(2px 2px at 85% 75%,#fff,transparent),linear-gradient(160deg,#1e1b4b,#4c1d95)"},
+  {"id": "d-chateau", "cat": "deco", "e": "🏰", "n": "Château", "c": 150, "lv": 8, "bg": "linear-gradient(180deg,#fbcfe8 0%,#f5d0fe 60%,#a78bfa 61%,#7c3aed 100%)"},
+  {"id": "d-volcan", "cat": "deco", "e": "🌋", "n": "Volcan", "c": 150, "lv": 11, "bg": "linear-gradient(180deg,#fecaca 0%,#fdba74 55%,#7c2d12 56%,#431407 100%)"}
+ ],
+ "shopCats": [
+  {"id": "power", "t": "Pouvoirs"},
+  {"id": "hat", "t": "Chapeaux"},
+  {"id": "obj", "t": "Objets"},
+  {"id": "deco", "t": "Décors"}
+ ],
+ "species": [
+  {"id": "oiseau", "n": "Oiseau", "st": ["🥚", "🐣", "🐥", "🦅"]},
+  {"id": "dragon", "n": "Dragon", "st": ["🥚", "🦎", "🐲", "🐉"]},
+  {"id": "marin", "n": "Créature marine", "st": ["🥚", "🐟", "🐬", "🐳"]},
+  {"id": "plante", "n": "Plante magique", "st": ["🌰", "🌱", "🌿", "🌳"]}
+ ],
+ "stageLevels": [
+  1,
+  3,
+  8,
+  14
+ ],
+ "difficulty": {"f": {"n": "Facile", "xp": 6, "g": 3}, "n": {"n": "Normal", "xp": 10, "g": 5}, "d": {"n": "Défi", "xp": 15, "g": 8}}
+}
+</script>
+<script>
+(function(){
+"use strict";
+var KEY = "boost_pap_v1";
+
+/* =================== Données (lues dans les blocs JSON) =================== */
+function readJSON(id){ try{ return JSON.parse(document.getElementById(id).textContent); }catch(e){ return null; } }
+var C = readJSON("boost-contenus") || {}, G = readJSON("boost-jeu") || {};
+var NEEDS = C.needs || [], SKILLS = C.skills || [], RATES = C.rates || [], RATE_E = C.rateIcons || [], SUGG = C.missionIdeas || [], MOODS = C.moods || [];
+var TASK_TYPES = C.taskTypes || [], GENERIC_STEPS = C.genericSteps || [], ROUTINES = C.routines || [], MOVES = C.moves || [];
+var WIN_WHAT = C.winWhat || [], WIN_SUBJ = C.winSubjects || [], WIN_FEEL = C.winFeel || [], GOAL_WHEN = C.goalWhen || [], PHRASES = C.phrases || [];
+var MAXL = G.maxLevel || 20, THEMES = G.themes || [], AVATARS = G.avatars || [], FRAMES = G.frames || [], WALLS = G.walls || [], LEVEL_NAMES = G.levelNames || [];
+var SHOP = G.shop || [], SHOP_CATS = G.shopCats || [], SPECIES = G.species || [], STAGE_LV = G.stageLevels || [1,3,8,14], DIFF = G.difficulty || {};
 function item(id){ for(var i=0;i<SHOP.length;i++){ if(SHOP[i].id===id) return SHOP[i]; } return null; }
 function chestAt(L){ return (5 + L) * (L % 5 === 0 ? 2 : 1); }
 function unlocksAt(L){
@@ -537,11 +708,13 @@ var TROPHIES = [
   {id:"m10", e:"🚀", t:"En mission", d:"Réussir 10 missions", f:function(p){return p.st.m>=10;}},
   {id:"m50", e:"🛰️", t:"Agent d’élite", d:"Réussir 50 missions", f:function(p){return p.st.m>=50;}},
   {id:"n1", e:"🙋", t:"J’ose demander", d:"Dire un besoin pour la première fois", f:function(p){return p.st.n>=1;}},
+  {id:"a1", e:"🛡️", t:"Je connais mes aides", d:"Utiliser une aide prévue pour toi", f:function(p){return p.st.a>=1;}},
   {id:"n10", e:"📣", t:"Je sais ce qu’il me faut", d:"Dire 10 besoins", f:function(p){return p.st.n>=10;}},
   {id:"w1", e:"⭐", t:"Première victoire", d:"Noter une victoire", f:function(p){return p.st.w>=1;}},
+  {id:"w5", e:"🎲", t:"Boîte à fiertés", d:"Relire une victoire au hasard", f:function(p){return !!p.reread;}},
   {id:"w10", e:"🌟", t:"Collection de victoires", d:"Noter 10 victoires", f:function(p){return p.st.w>=10;}},
-  {id:"s3", e:"🔥", t:"Trois jours de suite", d:"Revenir 3 jours d’affilée", f:function(p){return p.st.ms>=3;}},
-  {id:"s7", e:"☄️", t:"Une semaine en feu", d:"Revenir 7 jours d’affilée", f:function(p){return p.st.ms>=7;}},
+  {id:"s3", e:"🔥", t:"Série de 3", d:"Revenir 3 fois d’affilée (jours ou semaines selon ta classe)", f:function(p){return p.st.ms>=3;}},
+  {id:"s7", e:"☄️", t:"Série de feu", d:"Revenir 7 fois d’affilée (jours ou semaines selon ta classe)", f:function(p){return p.st.ms>=7;}},
   {id:"up1", e:"📈", t:"Ça monte !", d:"Progresser dans une compétence", f:function(p){return p.st.up>=1;}},
   {id:"up5", e:"🧗", t:"Grimpeur·se", d:"Progresser 5 fois", f:function(p){return p.st.up>=5;}},
   {id:"all", e:"🧭", t:"Je me connais", d:"Évaluer toutes mes compétences", f:function(p){return Object.keys(p.ratings).length>=SKILLS.length;}},
@@ -563,7 +736,7 @@ var S, screen = "boot", homeIdx = 0, kbd = false, tSel = null, pinBuf = "", tUnl
 function defaults(){
   return {v:3, profiles:[], cur:null,
     settings:{theme:"auto", size:0, spacing:false, sound:true, motion:true, tts:true, pictos:false, calm:false},
-    teacher:{pin:"1234", seasonMode:"trimestre", manualN:0}};
+    teacher:{pin:"1234", seasonMode:"trimestre", manualN:0, streakMode:"jour", lastBackup:""}};
 }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function load(){
@@ -579,6 +752,8 @@ function load(){
         if(!o.teacher.pin) o.teacher.pin = "1234";
         if(!o.teacher.seasonMode) o.teacher.seasonMode = "trimestre";
         if(!o.teacher.manualN) o.teacher.manualN = 0;
+        if(!o.teacher.streakMode) o.teacher.streakMode = "jour";
+        if(!o.teacher.lastBackup) o.teacher.lastBackup = "";
         delete o.teacher.rewards;
         o.v = 3;
         o.profiles.forEach(fixProfile);
@@ -596,12 +771,13 @@ function fixProfile(p){
   var lv = level(p.xp); if(lv > p.best) p.best = lv;
   if(!p.equip) p.equip = {hat:"", obj:"", deco:""};
   if(!p.pet) p.pet = {sp:"", name:""};
+  if(!p.plan) p.plan = [];
 }
 function blankProfile(name, av, th){
   return {id:"p"+Date.now()+Math.floor(Math.random()*1000), name:name, av:av, th:th, fr:"none", wp:"none", xp:0, gems:0, best:1,
     season:"", seasonLabel:"", seasons:[], owned:[], equip:{hat:"", obj:"", deco:""}, pet:{sp:"", name:""}, freezes:0, dbl:"",
     missions:[], ratings:{}, wins:[], needsLog:[], moods:[], redeemed:[], trophies:[], inbox:[], days:[],
-    st:{m:0,n:0,w:0,r:0,up:0,ms:0,f:0,t:0,rt:0,g:0}, daily:{d:""}, goals:[], task:null, rt:{d:"", c:{}}, created:today()};
+    st:{m:0,n:0,w:0,r:0,up:0,ms:0,f:0,t:0,rt:0,g:0,a:0}, daily:{d:""}, goals:[], task:null, rt:{d:"", c:{}}, plan:[], created:today()};
 }
 function seasonInfo(){
   var mode = S.teacher.seasonMode || "trimestre", d = new Date(), m = d.getMonth()+1, y = d.getFullYear(), sy = m >= 9 ? y : y-1;
@@ -663,25 +839,47 @@ function theme(id){ for(var i=0;i<THEMES.length;i++){ if(THEMES[i].id===id) retu
 function daily(p){ if(p.daily.d !== today()){ p.daily = {d:today(), needs:0, wins:0, rated:false, mood:false, focus:0, starts:0}; } return p.daily; }
 function isSchoolDay(d){ var w = d.getDay(); return w !== 0 && w !== 6; }
 function prevSchoolDay(d){ var x = new Date(d.getTime()); do { x.setDate(x.getDate()-1); } while(!isSchoolDay(x)); return x; }
+function weekMode(){ return S.teacher.streakMode === "semaine"; }
+function monday(d){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); var w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); return x; }
+function weekKey(d){ return dstr(monday(d)); }
+function weekSet(p){ var m = {}; p.days.forEach(function(s){ var q = s.split("-"); m[weekKey(new Date(+q[0], +q[1]-1, +q[2]))] = true; }); return m; }
+function prevWeek(d){ var x = monday(d); x.setDate(x.getDate() - 7); return x; }
 function markDay(p){
   var t = today();
   if(p.days.indexOf(t) < 0){
-    var y = prevSchoolDay(new Date()), y2 = prevSchoolDay(y);
-    if(p.days.indexOf(dstr(y)) < 0 && p.days.indexOf(dstr(y2)) >= 0 && p.freezes > 0){
-      p.days.push(dstr(y)); p.freezes--;
-      setTimeout(function(){ toast("🧊 Ton gel a protégé ta série !"); }, 1200);
+    if(weekMode()){
+      var ws = weekSet(p), w1 = prevWeek(new Date()), w2 = prevWeek(w1);
+      if(!ws[weekKey(new Date())] && !ws[dstr(w1)] && ws[dstr(w2)] && p.freezes > 0){
+        p.days.push(dstr(w1)); p.freezes--;
+        setTimeout(function(){ toast("🧊 Ton gel a protégé ta série !"); }, 1200);
+      }
+    } else {
+      var y = prevSchoolDay(new Date()), y2 = prevSchoolDay(y);
+      if(p.days.indexOf(dstr(y)) < 0 && p.days.indexOf(dstr(y2)) >= 0 && p.freezes > 0){
+        p.days.push(dstr(y)); p.freezes--;
+        setTimeout(function(){ toast("🧊 Ton gel a protégé ta série !"); }, 1200);
+      }
     }
-    p.days.push(t); if(p.days.length > 400) p.days.shift();
+    p.days.push(t); p.days.sort(); if(p.days.length > 400) p.days.shift();
   }
   var s = streak(p); if(s > p.st.ms) p.st.ms = s;
 }
 function streak(p){
-  var d = new Date(), c = 0;
+  var c = 0, d;
+  if(weekMode()){
+    var ws = weekSet(p); d = new Date();
+    if(ws[weekKey(d)]) c++;
+    d = prevWeek(d);
+    while(ws[dstr(d)]){ c++; d = prevWeek(d); }
+    return c;
+  }
+  d = new Date();
   if(p.days.indexOf(dstr(d)) >= 0) c++;
   d = prevSchoolDay(d);
   while(p.days.indexOf(dstr(d)) >= 0){ c++; d = prevSchoolDay(d); }
   return c;
 }
+function streakUnit(n){ return weekMode() ? (n > 1 ? "semaines" : "semaine") : (n > 1 ? "jours" : "jour"); }
 
 /* =================== Sons & voix =================== */
 function beep(type){
@@ -723,13 +921,19 @@ function toast(msg, gold){
   $("toasts").appendChild(el);
   setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 2600);
 }
+var lastFocus = null;
 function modal(html){
+  if(!$("modal").innerHTML) lastFocus = document.activeElement;
   $("modal").innerHTML = '<div class="modal" data-a="bg"><div class="box" role="dialog" aria-modal="true">'+
     '<button class="icon-btn close" data-a="close" aria-label="Fermer">✕</button>'+html+'</div></div>';
   var b = $("modal").querySelector(".box button:not(.close), .box input, .box textarea");
   if(b && kbd) b.focus();
 }
-function closeModal(){ $("modal").innerHTML = ""; }
+function closeModal(){
+  $("modal").innerHTML = "";
+  if(kbd && lastFocus && document.body.contains(lastFocus) && lastFocus.focus) lastFocus.focus();
+  lastFocus = null;
+}
 function burst(){
   var s = "", em = ["⭐","💎","✨","🎉","🌟"];
   for(var i=0;i<16;i++){
@@ -835,7 +1039,7 @@ function topbar(p){
     '<button class="me" data-a="go" data-v="console" aria-label="Ma console"><span class="av'+frCls(p)+'">'+p.av+'</span><span><b>'+esc(p.name)+'</b><small>Niv. '+L+' · '+esc(lvlName(L))+'</small></span></button>'+
     '<span class="spacer"></span>'+
     '<span class="pill" title="Mes gemmes">💎 '+p.gems+'</span>'+
-    '<span class="pill" title="Jours d’affilée">🔥 '+streak(p)+'</span>'+
+    '<span class="pill" title="Série : '+streakUnit(2)+' d’affilée">🔥 '+streak(p)+'</span>'+
     tmPill()+'<span class="clock" id="clock">'+clockTxt()+'</span></div>'+
     '<div class="xpwrap"><div class="xpbar" role="progressbar" aria-valuenow="'+pc+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pc+'%"></i></div>'+
     '<div class="xptxt"><span>'+p.xp+' XP</span><span>'+(max ? "Niveau max de la saison 👑" : "Encore "+(hi-p.xp)+" XP avant le niveau "+(L+1)+" 🎁")+'</span></div></div>';
@@ -931,7 +1135,7 @@ function vMissions(p){
   if(!p.missions.length) h += '<div class="card">Tu n’as pas encore de mission. Choisis-en une ci-dessous pour démarrer.</div>';
   p.missions.forEach(function(m){
     var done = m.last === today();
-    h += '<div class="mission'+(done?' done':'')+'"><span class="ic">'+m.e+'</span><span class="tx"><b>'+esc(m.t)+'</b><small>Réussie '+m.count+' fois<button class="diff '+(m.lvl||"n")+'" data-a="mdiff" data-v="'+m.id+'" aria-label="Changer le niveau de la mission">'+DIFF[m.lvl||"n"].n+' · +'+DIFF[m.lvl||"n"].xp+' XP</button></small></span>'+
+    h += '<div class="mission'+(done?' done':'')+(m.prof?' prof':'')+'"><span class="ic">'+m.e+'</span><span class="tx"><b>'+esc(m.t)+'</b><small>'+(m.prof ? '<span class="ptag2">Proposée par ton prof</span> ' : '')+'Réussie '+m.count+' fois<button class="diff '+(m.lvl||"n")+'" data-a="mdiff" data-v="'+m.id+'" aria-label="Changer le niveau de la mission">'+DIFF[m.lvl||"n"].n+' · +'+DIFF[m.lvl||"n"].xp+' XP</button></small></span>'+
       sayBtn(m.t)+
       (done ? '<button class="btn ok" disabled>Fait ✓</button>' : '<button class="btn" data-a="mdone" data-v="'+m.id+'">J’ai réussi</button>')+
       '<button class="icon-btn" data-a="mdel" data-v="'+m.id+'" aria-label="Retirer la mission">🗑️</button></div>';
@@ -950,11 +1154,18 @@ function vMissions(p){
   return h;
 }
 /* ---------- Besoins ---------- */
+function needCard(n, i, planned){
+  return '<button class="need'+(planned ? ' planned' : '')+'" data-a="need" data-v="'+i+'"><span class="e" aria-hidden="true">'+n.e+'</span><b>'+esc(n.t)+'</b>'+(planned ? '<span class="ptag">✓ prévu pour moi</span>' : '')+'</button>';
+}
 function vNeeds(p){
-  var h = '<p class="lead">Dire ce dont on a besoin, c’est une force. Touche une carte : elle s’affiche en grand pour la montrer à ton prof, sans avoir à parler devant toute la classe.</p><div class="grid">';
-  NEEDS.forEach(function(n, i){
-    h += '<button class="need" data-a="need" data-v="'+i+'"><span class="e" aria-hidden="true">'+n.e+'</span><b>'+esc(n.t)+'</b></button>';
-  });
+  var h = '<p class="lead">Dire ce dont on a besoin, c’est une force. Touche une carte : elle s’affiche en grand pour la montrer à ton prof, sans avoir à parler devant toute la classe.</p>';
+  var mine = [];
+  NEEDS.forEach(function(n, i){ if(p.plan.indexOf(n.id) >= 0) mine.push(needCard(n, i, true)); });
+  if(mine.length){
+    h += '<h2>🛡️ Mes aides prévues</h2><p class="note" style="margin-top:0">Ces aides sont prévues pour toi par l’équipe. Tu as le droit de les demander, sans te justifier.</p><div class="grid">'+mine.join("")+'</div><h2>Toutes les cartes</h2>';
+  }
+  h += '<div class="grid">';
+  NEEDS.forEach(function(n, i){ if(p.plan.indexOf(n.id) < 0) h += needCard(n, i, false); });
   h += '</div><h2>Écrire mon propre message</h2><textarea class="field" id="ncustom" maxlength="160" placeholder="J’aimerais…"></textarea>'+
     '<p><button class="btn" data-a="ncustom">Afficher ma carte</button></p>';
   var counts = needCounts(p);
@@ -972,9 +1183,11 @@ function needCounts(p){
   out.sort(function(a,b){ return b.c - a.c; });
   return out;
 }
-function showNeed(n){
-  modal('<div class="bigcard"><div class="e">'+n.e+'</div><h3>'+esc(n.t)+'</h3><p>« '+esc(n.m)+' »</p><small>Montre cette carte à ton prof</small></div>'+
-    '<p style="text-align:center;margin-top:16px">'+(S.settings.tts ? '<button class="btn ghost" data-a="say" data-v="'+esc(n.m)+'">🔊 Écouter</button> ' : '')+
+function showNeed(n, planned){
+  modal('<div class="bigcard" id="bigcard" data-a="lower"><div class="e">'+n.e+'</div><h3>'+esc(n.t)+'</h3><p>« '+esc(n.m)+' »</p>'+
+    (planned ? '<p class="planline">🛡️ Aide prévue dans mon plan</p>' : '')+
+    '<small class="hint1">Montre cette carte à ton prof</small><small class="hint2">Touche pour baisser la carte</small></div>'+
+    '<p style="text-align:center;margin-top:16px"><button class="btn l" data-a="raise">✋ Lever la carte</button> '+(S.settings.tts ? '<button class="btn ghost" data-a="say" data-v="'+esc(n.m)+'">🔊 Écouter</button> ' : '')+
     '<button class="btn" data-a="close">C’est bon</button></p>');
 }
 /* ---------- Progrès ---------- */
@@ -982,6 +1195,16 @@ function lastRate(p, id){ var r = p.ratings[id]; return r && r.length ? r[r.leng
 function vProgress(p){
   var h = '<p class="lead">Où en es-tu ? Il n’y a pas de mauvaise réponse : c’est ta carte du monde. Reviens la mettre à jour pour voir ton chemin parcouru.</p>';
   h += '<div class="stat3"><div><b>'+p.st.m+'</b><span>missions réussies</span></div><div><b>'+p.st.n+'</b><span>besoins exprimés</span></div><div><b>'+p.st.up+'</b><span>progrès notés</span></div></div>';
+  var rated = Object.keys(p.ratings).length;
+  if(rated >= 3){
+    h += '<h2>Ma carte</h2><div class="card radarcard">'+radar(p, false)+'<div class="legend"><span><i class="lg1"></i>Au début</span><span><i class="lg2"></i>Maintenant</span></div></div>';
+  }
+  var ups = journey(p);
+  if(ups.length){
+    h += '<h2>🧗 Mon chemin parcouru</h2><div class="list">';
+    ups.forEach(function(u){ h += '<div class="card row"><span style="font-size:24px">'+u.s.e+'</span><span style="flex:1">'+esc(u.s.t)+'<br><small class="note" style="margin:0">depuis le '+fdate(u.from)+'</small></span><b class="jr">'+RATE_E[u.a]+' → '+RATE_E[u.b]+'</b></div>'; });
+    h += '</div>';
+  }
   h += '<h2>Mes compétences</h2><div class="list">';
   SKILLS.forEach(function(s){
     var v = lastRate(p, s.id), bars = "";
@@ -990,6 +1213,35 @@ function vProgress(p){
   });
   h += '</div>';
   return h;
+}
+function journey(p){
+  var out = [];
+  SKILLS.forEach(function(sk){
+    var r = p.ratings[sk.id]; if(!r || r.length < 2) return;
+    var a = r[0].v, b = r[r.length-1].v;
+    if(b > a) out.push({s:sk, a:a, b:b, from:r[0].d});
+  });
+  return out;
+}
+function radar(p, print){
+  var N = SKILLS.length, W = 320, cx = 160, cy = 150, R0 = 108, h = "", i, k;
+  function pt(i, v){ var ang = -Math.PI/2 + i*2*Math.PI/N, rr = R0*v/4; return [cx + rr*Math.cos(ang), cy + rr*Math.sin(ang)]; }
+  var ink = print ? "#999" : "var(--line)", c1 = print ? "#888" : "var(--muted)", c2 = print ? "#0a7ea4" : "var(--jr)";
+  for(k=1;k<=4;k++){
+    var ring = []; for(i=0;i<N;i++){ var q = pt(i, k); ring.push(q[0].toFixed(1)+","+q[1].toFixed(1)); }
+    h += '<polygon points="'+ring.join(" ")+'" fill="none" stroke="'+ink+'" stroke-dasharray="'+(k<4?"3 4":"0")+'"/>';
+  }
+  var first = [], last = [];
+  for(i=0;i<N;i++){
+    var e = pt(i, 4), lb = pt(i, 4.75), r = p.ratings[SKILLS[i].id] || [];
+    h += '<line x1="'+cx+'" y1="'+cy+'" x2="'+e[0].toFixed(1)+'" y2="'+e[1].toFixed(1)+'" stroke="'+ink+'"/>';
+    h += '<text x="'+lb[0].toFixed(1)+'" y="'+(lb[1]+6).toFixed(1)+'" font-size="17" text-anchor="middle">'+SKILLS[i].e+'</text>';
+    var a = r.length ? r[0].v : 0, b = r.length ? r[r.length-1].v : 0, qa = pt(i, a), qb = pt(i, b);
+    first.push(qa[0].toFixed(1)+","+qa[1].toFixed(1)); last.push(qb[0].toFixed(1)+","+qb[1].toFixed(1));
+  }
+  h += '<polygon points="'+first.join(" ")+'" fill="none" stroke="'+c1+'" stroke-width="2" stroke-dasharray="5 4"/>';
+  h += '<polygon points="'+last.join(" ")+'" fill="'+c2+'" fill-opacity=".25" stroke="'+c2+'" stroke-width="3" stroke-linejoin="round"/>';
+  return '<svg class="radar" viewBox="0 0 '+W+' 300" role="img" aria-label="Carte de mes compétences : au début et maintenant">'+h+'</svg>';
 }
 function chart(arr){
   var pts = arr.slice(-12), W = 320, H = 130, px = 26, py = 16;
@@ -1028,12 +1280,25 @@ function vWins(p){
   h += '<h2>Des détails ? (facultatif)</h2><textarea class="field" id="wtext" maxlength="240" placeholder="Raconte avec tes mots…"></textarea>'+
     '<p class="note">Astuce : le micro de ton clavier permet de dicter au lieu d’écrire.</p>'+
     '<p><button class="btn" data-a="wadd">Sauvegarder ma victoire</button></p>';
-  h += '<h2>Mes sauvegardes</h2><div class="list">';
+  h += '<h2>Mes sauvegardes</h2>';
+  if(p.wins.length >= 2) h += '<p style="margin-top:0"><button class="btn ghost" data-a="reread">🎲 Relire une victoire au hasard</button></p>';
+  h += '<div class="list">';
   if(!p.wins.length) h += '<div class="card">Ta première victoire t’attend. Qu’est-ce qui s’est bien passé aujourd’hui ?</div>';
   p.wins.slice().reverse().forEach(function(w){
     h += '<div class="save"><span class="dt">'+wday(w.d)+'<br>'+fdate(w.d)+'</span><span style="flex:1">'+esc(w.t)+'</span></div>';
   });
   return h + '</div>';
+}
+function pastWin(p){
+  var old = p.wins.filter(function(w){ return w.d !== today(); });
+  if(!old.length) old = p.wins;
+  return old.length ? old[Math.floor(Math.random()*old.length)] : null;
+}
+function prideModal(p){
+  var w = pastWin(p); if(!w) return;
+  modal(burst()+'<div class="bigcard pride"><div class="e">🌟</div><h3>Souviens-toi</h3><p>Le '+wday(w.d)+' '+fdate(w.d)+' :</p><p><b>'+esc(w.t)+'</b></p><small>Tu l’as fait une fois. Tu peux le refaire.</small></div>'+
+    '<p style="text-align:center;margin-top:16px">'+(S.settings.tts ? '<button class="btn ghost" data-a="say" data-v="'+esc("Souviens-toi. "+w.t)+'">🔊 Écouter</button> ' : '')+
+    '<button class="btn ghost" data-a="reread">🎲 Une autre</button> <button class="btn" data-a="close">Merci</button></p>');
 }
 function winText(extra){
   var parts = [];
@@ -1099,7 +1364,11 @@ function petHTML(p, size){
 function petLine(p){
   var todo = 0; p.missions.forEach(function(m){ if(m.last !== today()) todo++; });
   var mood = ""; p.moods.forEach(function(m){ if(m.d===today()) mood = m.m; });
-  if(mood === "orage" || mood === "pluie") return "Je suis là. Une carte besoin peut t’aider aujourd’hui.";
+  if(mood === "orage" || mood === "pluie"){
+    var pw = p.wins.length && Math.random() < .5 ? pastWin(p) : null;
+    if(pw) return "Tu te souviens ? Le "+fdate(pw.d)+" : « "+pw.t.replace(/^[^A-Za-z0-9\u00C0-\u00FF]+\s/, "")+" ». Tu en es capable.";
+    return "Je suis là. Une carte besoin peut t’aider aujourd’hui.";
+  }
   if(todo && Math.random() < .5) return "Il te reste "+todo+" mission"+(todo>1?"s":"")+" aujourd’hui. On y va ensemble ?";
   return PHRASES[Math.floor(Math.random()*PHRASES.length)];
 }
@@ -1194,7 +1463,9 @@ function vMood(p){
   MOODS.forEach(function(m){ h += '<button class="moodb'+(t===m.id?' sel':'')+'" data-a="mood" data-v="'+m.id+'"><span class="e">'+m.e+'</span><span>'+m.t+'</span></button>'; });
   h += '</div>';
   if(t === "pluie" || t === "orage"){
-    h += '<div class="card" style="margin-top:16px"><b>Ça arrive à tout le monde.</b> Qu’est-ce qui pourrait t’aider aujourd’hui ?<p style="margin-bottom:0"><button class="btn" data-a="go" data-v="besoins">Choisir une carte besoin</button></p></div>';
+    h += '<div class="card" style="margin-top:16px"><b>Ça arrive à tout le monde.</b> Qu’est-ce qui pourrait t’aider aujourd’hui ?<p style="margin-bottom:0"><button class="btn" data-a="go" data-v="besoins">Choisir une carte besoin</button> <button class="btn ghost" data-a="go" data-v="focus">🤸 Une pause active</button></p></div>';
+    var pw = pastWin(p);
+    if(pw) h += '<div class="card pridecard" style="margin-top:12px"><b>🌟 Souviens-toi :</b> le '+fdate(pw.d)+', '+esc(pw.t)+'<p style="margin-bottom:0"><button class="btn ghost" data-a="reread">🎲 Relire mes fiertés</button></p></div>';
   }
   var week = [];
   for(var i=6;i>=0;i--){ var d = new Date(); d.setDate(d.getDate()-i); week.push(dstr(d)); }
@@ -1336,6 +1607,15 @@ function classView(){
   var wk = new Date(); wk.setDate(wk.getDate()-6); var wl = dstr(wk), mc = {};
   S.profiles.forEach(function(q){ q.moods.forEach(function(m){ if(m.d >= wl) mc[m.m] = (mc[m.m]||0)+1; }); });
   h += '<p style="margin-bottom:0"><b>Météo de la semaine :</b> '+MOODS.map(function(m){ return m.e+" "+(mc[m.id]||0); }).join("   ")+'</p>';
+  var watch = [];
+  S.profiles.forEach(function(q){
+    var bad = 0; q.moods.forEach(function(m){ if(m.d >= wl && (m.m === "orage" || m.m === "pluie")) bad++; });
+    var lastD = q.days.length ? q.days[q.days.length-1] : "", why = [];
+    if(bad >= 2) why.push(bad+" météos difficiles cette semaine");
+    if(lastD && lastD < dstr(new Date(Date.now() - 14*86400000))) why.push("pas venu·e depuis le "+fdate(lastD));
+    if(why.length) watch.push('<div class="row" style="margin:4px 0"><span>'+q.av+'</span><span style="flex:1"><b style="font-weight:500">'+esc(q.name)+'</b> : '+why.join(", ")+'</span></div>');
+  });
+  h += '<p style="margin-bottom:4px"><b>Points d’attention :</b>'+(watch.length ? '' : ' aucun')+'</p>'+watch.join("");
   h += '<p class="note" style="margin-bottom:0">Logique CUA : quand un même besoin revient chez plusieurs élèves, l’obstacle vient souvent du support, pas de l’élève.</p></div>';
   return h;
 }
@@ -1382,13 +1662,20 @@ function vTeacher(){
       '<div class="chips" style="margin-top:10px"><button class="chip" data-a="tgive" data-v="10|0">+10 XP</button><button class="chip" data-a="tgive" data-v="25|0">+25 XP</button>'+
       '<button class="chip" data-a="tgive" data-v="0|10">+10 💎</button><button class="chip" data-a="tgive" data-v="0|25">+25 💎</button><button class="chip" data-a="tgive" data-v="0|0">Message seul</button></div>'+
       '<p class="note">L’élève verra le message en ouvrant son accueil.</p></div>';
+    h += '<h2>Proposer une mission à '+esc(p.name)+'</h2><div class="card"><div class="row"><input class="field" id="tmiss" maxlength="70" placeholder="Ex. J’ai relu ma consigne avant de commencer"><button class="btn" data-a="tmission">Proposer</button></div>'+
+      '<p class="note" style="margin-bottom:0">La mission apparaît chez l’élève avec la mention « Proposée par ton prof » ('+p.missions.length+'/8 missions).</p></div>';
+    h += '<h2>Aides prévues pour '+esc(p.name)+'</h2><div class="card"><p class="note" style="margin-top:0">PAP, PPRE, PAI, PPS ou simple adaptation : les cartes cochées passent en tête chez l’élève, avec la mention « prévu pour moi ». Il sait ainsi à quoi il a droit.</p><div class="chips">';
+    NEEDS.forEach(function(n){ var on = p.plan.indexOf(n.id) >= 0; h += '<button class="chip'+(on?' sel':'')+'" data-a="tplan" data-v="'+n.id+'" aria-pressed="'+on+'">'+(on ? "✓ " : "")+n.e+' '+esc(n.t)+'</button>'; });
+    h += '</div></div>';
     h += '<h2>Synthèse individuelle</h2><p class="note" style="margin-top:0">Utile pour un PAP, un PPRE ou une équipe éducative.</p><div class="card">'+
-      '<p style="margin-top:0">Niveau '+level(p.xp)+' cette saison (record : '+p.best+') · '+p.xp+' XP · '+p.gems+' 💎 · série max '+p.st.ms+' jour(s)</p>'+
+      '<p style="margin-top:0">Niveau '+level(p.xp)+' cette saison (record : '+p.best+') · '+p.xp+' XP · '+p.gems+' 💎 · série max '+p.st.ms+' '+streakUnit(p.st.ms)+'</p>'+
       (p.seasons.length ? '<p><b>Saisons passées :</b> '+p.seasons.map(function(s){ return esc(s.label)+" niv. "+s.lv; }).join(", ")+'</p>' : '')+
       '<p>'+p.st.m+' missions réussies, '+p.st.n+' besoins exprimés, '+p.st.w+' victoires notées, '+p.st.r+' achats en boutique.</p>'+
       '<p>'+p.st.f+' blocs de concentration, '+p.st.t+' tâches lancées et finies, '+p.st.rt+' routines complètes, '+p.st.g+' grands objectifs atteints.</p>'+
+      '<p><b>Aides prévues :</b> '+(p.plan.length ? planNames(p).join(", ")+' (utilisées '+p.st.a+' fois)' : "aucune renseignée")+'</p>'+
       '<p><b>Besoins les plus demandés :</b> '+(counts.length ? counts.slice(0,4).map(function(c){ return esc(c.n.t)+" ("+c.c+")"; }).join(", ") : "aucun pour l’instant")+'</p>'+
       '<p style="margin-bottom:0"><b>Autopositionnement actuel :</b><br>'+SKILLS.map(function(s){ var v = lastRate(p, s.id); return esc(s.t)+" : "+(v ? RATES[v] : "—"); }).join("<br>")+'</p></div>';
+    h += '<p><button class="btn" data-a="print">🖨️ Imprimer la fiche bilan</button></p>';
     if(p.wins.length){
       h += '<h2>Dernières victoires notées</h2><div class="list">';
       p.wins.slice(-3).reverse().forEach(function(w){ h += '<div class="save"><span class="dt">'+fdate(w.d)+'</span><span style="flex:1">'+esc(w.t)+'</span></div>'; });
@@ -1400,12 +1687,62 @@ function vTeacher(){
     '<div class="seg">'+[["trimestre","Trimestres"],["semestre","Semestres"],["manuel","Manuel"]].map(function(o){ return '<button class="'+(mode===o[0]?'sel':'')+'" data-a="smode" data-v="'+o[0]+'">'+o[1]+'</button>'; }).join("")+'</div>'+
     '<p class="note">En fin de saison, le niveau de chaque élève repart à 1. Gemmes, trophées et éléments débloqués sont conservés, et l’élève reçoit une médaille selon son niveau final. Changer de rythme ne remet personne à zéro.</p>'+
     (mode === "manuel" ? '<button class="btn l" data-a="newseason">Lancer une nouvelle saison pour tous</button>' : '')+'</div>';
-  h += '<h2>Sauvegarde et partage</h2><p class="note" style="margin-top:0">Les données restent sur cet appareil uniquement. Pour changer d’appareil, copiez la sauvegarde puis collez-la sur le nouveau.</p>'+
-    '<div class="row" style="flex-wrap:wrap"><button class="btn ghost" data-a="export">Copier la sauvegarde</button><button class="btn ghost" data-a="import">Coller une sauvegarde</button></div>';
+  var sm = S.teacher.streakMode;
+  h += '<h2>Série 🔥</h2><div class="card"><div class="seg">'+[["jour","Chaque jour d’école"],["semaine","Chaque semaine"]].map(function(o){ return '<button class="'+(sm===o[0]?'sel':'')+'" data-a="streakmode" data-v="'+o[0]+'">'+o[1]+'</button>'; }).join("")+'</div>'+
+    '<p class="note" style="margin-bottom:0">Si Boost n’est utilisé qu’en cours (deux ou trois fois par semaine), choisissez « Chaque semaine » : la série ne se casse plus entre deux séances, ce qui évite de décourager les élèves.</p></div>';
+  var lb = S.teacher.lastBackup, ago = lb ? Math.floor((new Date(today()).getTime() - new Date(lb).getTime())/86400000) : -1;
+  h += '<h2>Sauvegarde et partage</h2><div class="card'+(ago < 0 || ago > 14 ? ' warnbox' : '')+'"><p style="margin-top:0"><b>'+(ago < 0 ? "Aucune sauvegarde pour l’instant." : (ago === 0 ? "Dernière sauvegarde : aujourd’hui." : "Dernière sauvegarde : il y a "+ago+" jour"+(ago>1?"s":"")+"."))+'</b></p>'+
+    '<p class="note" style="margin-top:0">Les données restent sur cet appareil uniquement. Le navigateur peut les effacer (nettoyage, mode privé ; sur iPad ou iPhone, Safari efface les données d’un site non ouvert depuis 7 jours, sauf si Boost est ajouté à l’écran d’accueil). Téléchargez une sauvegarde régulièrement.</p>'+
+    '<div class="row" style="flex-wrap:wrap"><button class="btn" data-a="dlbackup">⬇️ Télécharger la sauvegarde</button><button class="btn ghost" data-a="pickfile">📂 Ouvrir un fichier</button>'+
+    '<button class="btn ghost" data-a="export">Copier en texte</button><button class="btn ghost" data-a="import">Coller du texte</button></div>'+
+    '<input type="file" id="impfile" accept=".json,application/json,text/plain" class="hidden"></div>';
   h += '<h2>Code prof</h2><div class="row"><input class="field" id="newpin" inputmode="numeric" maxlength="4" placeholder="Nouveau code à 4 chiffres"><button class="btn ghost" data-a="setpin">Changer</button></div>';
   if(p) h += '<h2 class="danger">Zone sensible</h2><button class="btn l" data-a="delp" data-v="'+p.id+'">Supprimer le profil de '+esc(p.name)+'</button>';
   h += '<p style="margin-top:24px"><button class="btn ghost" data-a="lock">🔒 Verrouiller l’espace prof</button></p>';
   return h;
+}
+
+function planNames(p){ var o = []; NEEDS.forEach(function(n){ if(p.plan.indexOf(n.id) >= 0) o.push(n.e+" "+n.t); }); return o; }
+function markBackup(){ S.teacher.lastBackup = today(); save(); }
+function importData(txt){
+  var o;
+  try{ o = JSON.parse(txt); }catch(e){ o = null; }
+  if(!o || !o.profiles || !o.teacher){ beep("err"); toast("Ce fichier n’est pas une sauvegarde Boost valide"); return false; }
+  try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(e){ toast("Impossible d’enregistrer sur cet appareil"); return false; }
+  S = load(); checkSeason(cur()); tUnlocked = false; closeModal(); toast("Sauvegarde importée ("+S.profiles.length+" profil"+(S.profiles.length>1?"s":"")+")"); screen = cur() ? "home" : "who"; render();
+  return true;
+}
+
+/* ---------- Fiche bilan imprimable ---------- */
+function printReport(p){
+  var since = dstr(new Date(Date.now() - 30*86400000)), counts = needCounts(p), n30 = 0, moodC = {}, i;
+  p.needsLog.forEach(function(l){ if(l.d >= since) n30++; });
+  p.moods.forEach(function(m){ if(m.d >= since) moodC[m.m] = (moodC[m.m]||0) + 1; });
+  var rows = SKILLS.map(function(sk){
+    var r = p.ratings[sk.id] || [];
+    if(!r.length) return '<tr><td>'+sk.e+' '+esc(sk.t)+'</td><td>—</td><td>—</td><td></td></tr>';
+    var a = r[0], b = r[r.length-1], tr = b.v > a.v ? "↗" : (b.v < a.v ? "↘" : "=");
+    return '<tr><td>'+sk.e+' '+esc(sk.t)+'</td><td>'+RATES[a.v]+'<br><small>'+fdate(a.d)+'</small></td><td>'+RATES[b.v]+'<br><small>'+fdate(b.d)+'</small></td><td class="c">'+tr+'</td></tr>';
+  }).join("");
+  var goals = p.goals.map(function(g){ var n = 0; g.steps.forEach(function(x){ if(x.done) n++; }); return '<li>'+esc(g.t)+' — '+(g.done ? "atteint" : n+"/"+g.steps.length+" étapes")+'</li>'; }).join("");
+  var wins = p.wins.slice(-6).reverse().map(function(w){ return '<li><b>'+fdate(w.d)+'</b> : '+esc(w.t)+'</li>'; }).join("");
+  var ms = p.missions.map(function(m){ return '<li>'+esc(m.t)+(m.prof ? " (proposée par le prof)" : "")+' — réussie '+m.count+' fois</li>'; }).join("");
+  var d = new Date();
+  var h = '<div class="pr-head"><div><h1>Fiche bilan Boost</h1><p>'+esc(p.name)+' · '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+'</p></div><div class="pr-av">'+p.av+'</div></div>'+
+    '<p class="pr-note">Autopositionnement de l’élève et traces de son activité dans l’application. Document de travail pour un PAP, un PPRE ou une équipe éducative ; ce n’est pas une évaluation.</p>'+
+    '<div class="pr-stats"><div><b>'+p.st.m+'</b>missions réussies</div><div><b>'+p.st.n+'</b>besoins exprimés<br><small>dont '+n30+' sur 30 jours</small></div><div><b>'+p.st.w+'</b>victoires notées</div><div><b>'+p.st.f+'</b>blocs de concentration</div><div><b>'+p.st.g+'</b>objectifs atteints</div><div><b>'+p.days.length+'</b>jours d’utilisation</div></div>'+
+    '<h2>Aides prévues</h2><p>'+(p.plan.length ? esc(planNames(p).join(" · "))+' — demandées '+p.st.a+' fois' : "Aucune renseignée dans Boost.")+'</p>'+
+    '<h2>Besoins exprimés par l’élève</h2>'+(counts.length ? '<ul>'+counts.slice(0,8).map(function(c){ return '<li>'+c.n.e+' '+esc(c.n.t)+' : '+c.c+' fois</li>'; }).join("")+'</ul>' : '<p>Aucun pour l’instant.</p>')+
+    '<div class="pr-cols"><div><h2>Autopositionnement</h2><table><tr><th>Compétence</th><th>Au début</th><th>Aujourd’hui</th><th></th></tr>'+rows+'</table></div>'+
+    '<div class="pr-radar">'+(Object.keys(p.ratings).length >= 3 ? radar(p, true)+'<p class="pr-note" style="text-align:center">Pointillés : premier positionnement · Bleu : aujourd’hui</p>' : '')+'</div></div>'+
+    '<h2>Météo (30 derniers jours)</h2><p>'+MOODS.map(function(m){ return m.e+' '+esc(m.t)+' : '+(moodC[m.id]||0); }).join(" · ")+'</p>'+
+    (ms ? '<h2>Missions en cours</h2><ul>'+ms+'</ul>' : '')+
+    (goals ? '<h2>Grands objectifs</h2><ul>'+goals+'</ul>' : '')+
+    (wins ? '<h2>Dernières victoires (mots de l’élève)</h2><ul>'+wins+'</ul>' : '')+
+    '<h2>Observations de l’équipe</h2><div class="pr-lines"></div><div class="pr-lines"></div><div class="pr-lines"></div>';
+  var el = $("print"); if(!el){ el = document.createElement("div"); el.id = "print"; document.body.appendChild(el); }
+  el.innerHTML = h;
+  setTimeout(function(){ try{ window.print(); }catch(e){ toast("Utilisez le menu Imprimer du navigateur"); } }, 80);
 }
 
 /* =================== Actions =================== */
@@ -1489,7 +1826,15 @@ function act(a, v, el){
       p.missions.push({id:"m"+Date.now(), e:"🎮", t:mt, last:"", count:0}); save(); beep("sel"); render(); break;
 
     case "need":
-      var n = NEEDS[+v]; logNeed(p, n.id); showNeed(n); break;
+      var n = NEEDS[+v], pl = p.plan.indexOf(n.id) >= 0;
+      if(pl) p.st.a++;
+      logNeed(p, n.id); showNeed(n, pl); break;
+    case "raise":
+      var bc = $("bigcard"); if(bc){ var mdl = closest(bc, ".modal"); if(mdl) mdl.classList.add("raised"); beep("sel"); try{ if(navigator.vibrate) navigator.vibrate(60); }catch(e){} }
+      break;
+    case "lower":
+      var mr = document.querySelector(".modal.raised"); if(mr){ mr.classList.remove("raised"); beep("back"); }
+      break;
     case "ncustom":
       var nt = ($("ncustom").value || "").replace(/^\s+|\s+$/g, "");
       if(!nt){ beep("err"); toast("Écris d’abord ton message"); return; }
@@ -1525,6 +1870,10 @@ function act(a, v, el){
       if(dw.wins <= 3) gain(p, 8, 3, "Victoire sauvegardée !"); else { save(); checkTrophies(p); toast("Victoire sauvegardée !"); }
       render(); break;
 
+    case "reread":
+      beep("ok"); prideModal(p);
+      if(!p.reread){ p.reread = true; save(); checkTrophies(p); }
+      break;
     case "buy":
       var bi = item(v);
       if(!bi || p.gems < priceOf(bi) || bi.lv > p.best) return;
@@ -1666,6 +2015,33 @@ function act(a, v, el){
       save(); checkTrophies(q);
       beep("ok"); toast("Envoyé à "+q.name);
       render(); break;
+    case "tplan":
+      var qp = byId(tSel); if(!qp) return;
+      var pi2 = qp.plan.indexOf(v);
+      if(pi2 >= 0) qp.plan.splice(pi2, 1); else qp.plan.push(v);
+      save(); beep("sel"); render(); break;
+    case "tmission":
+      var qm = byId(tSel); if(!qm) return;
+      var mtxt = ($("tmiss").value || "").replace(/^\s+|\s+$/g, "");
+      if(!mtxt){ beep("err"); toast("Écrivez la mission"); return; }
+      if(qm.missions.length >= 8){ beep("err"); toast(qm.name+" a déjà 8 missions"); return; }
+      qm.missions.push({id:"m"+Date.now(), e:"📌", t:mtxt, last:"", count:0, prof:true, lvl:"n"});
+      qm.inbox.push({d:today(), t:"Je te propose une nouvelle mission : « "+mtxt+" ». Tu peux choisir son niveau. Je crois en toi !"});
+      save(); beep("ok"); toast("Mission proposée à "+qm.name); render(); break;
+    case "print":
+      var qr = byId(tSel); if(qr) printReport(qr); break;
+    case "streakmode":
+      S.teacher.streakMode = v; save(); beep("sel"); toast(v === "semaine" ? "Série comptée par semaine" : "Série comptée par jour d’école"); render(); break;
+    case "dlbackup":
+      try{
+        var blob = new Blob([JSON.stringify(S, null, 1)], {type:"application/json"}), url = URL.createObjectURL(blob), lk = document.createElement("a");
+        lk.href = url; lk.download = "boost-sauvegarde-"+today()+".json"; document.body.appendChild(lk); lk.click();
+        setTimeout(function(){ document.body.removeChild(lk); URL.revokeObjectURL(url); }, 1500);
+        markBackup(); toast("Sauvegarde téléchargée"); render();
+      }catch(e){ toast("Téléchargement impossible ici : utilisez « Copier en texte »"); }
+      break;
+    case "pickfile":
+      var fi = $("impfile"); if(fi){ fi.value = ""; fi.click(); } break;
     case "smode":
       S.teacher.seasonMode = v;
       var nk = seasonInfo();
@@ -1688,6 +2064,7 @@ function act(a, v, el){
     case "copy":
       var ta = $("exp"); ta.focus(); ta.select();
       var done = false;
+      markBackup();
       try{ done = document.execCommand("copy"); }catch(e){}
       if(!done && navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(function(){ toast("Sauvegarde copiée"); }, function(){ toast("Sélectionnez le texte et copiez-le"); }); }
       else toast(done ? "Sauvegarde copiée" : "Sélectionnez le texte et copiez-le");
@@ -1697,13 +2074,9 @@ function act(a, v, el){
         '<textarea class="field" id="imp" style="min-height:160px;font-size:.75rem" placeholder="Collez la sauvegarde ici"></textarea><p><button class="btn l" data-a="importok">Remplacer les données</button></p>');
       break;
     case "importok":
-      try{
-        var o = JSON.parse($("imp").value);
-        if(!o || !o.profiles || !o.teacher) throw new Error("x");
-        localStorage.setItem(KEY, JSON.stringify(o));
-        S = load(); checkSeason(cur()); tUnlocked = false; closeModal(); toast("Sauvegarde importée"); screen = cur() ? "home" : "who"; render();
-      }catch(e){ beep("err"); toast("Ce texte n’est pas une sauvegarde Boost valide"); }
-      break;
+      importData($("imp").value); break;
+    case "fileok":
+      if(window.__boostFile) importData(window.__boostFile); window.__boostFile = null; break;
     case "delp":
       var dp = byId(v);
       confirmBox("Supprimer le profil de "+dp.name+" ?", "Toutes ses missions, victoires et progrès seront effacés de cet appareil.", "delpok", v, true); break;
@@ -1737,6 +2110,16 @@ document.addEventListener("click", function(e){
   if(t.disabled) return;
   act(a, t.getAttribute("data-v"), t);
 });
+document.addEventListener("change", function(e){
+  if(!e.target || e.target.id !== "impfile" || !e.target.files || !e.target.files[0]) return;
+  var f = e.target.files[0], rd = new FileReader();
+  rd.onload = function(){
+    window.__boostFile = String(rd.result || "");
+    confirmBox("Remplacer les données ?", "Le fichier « "+f.name+" » va remplacer toutes les données de cet appareil.", "fileok", "", true);
+  };
+  rd.onerror = function(){ toast("Lecture du fichier impossible"); };
+  rd.readAsText(f);
+});
 document.addEventListener("mousedown", function(){ kbd = false; });
 document.addEventListener("touchstart", function(){ kbd = false; }, {passive:true});
 document.addEventListener("focusin", function(e){
@@ -1750,8 +2133,19 @@ document.addEventListener("mouseover", function(e){
 document.addEventListener("keydown", function(e){
   kbd = true;
   var tag = (e.target.tagName || "").toLowerCase(), typing = tag === "input" || tag === "textarea";
+  if(e.key === "Tab" && $("modal").innerHTML){
+    var fs = $("modal").querySelectorAll(".box button:not([disabled]), .box input, .box textarea");
+    if(fs.length){
+      var first = fs[0], last = fs[fs.length-1], inBox = closest(document.activeElement, ".box");
+      if(!inBox){ first.focus(); e.preventDefault(); }
+      else if(e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+      else if(!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+    }
+    return;
+  }
   if(document.querySelector(".boot") && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); act("boot"); return; }
   if(e.key === "Escape" || (!typing && (e.key === "b" || e.key === "B" || e.key === "Backspace"))){
+    if(document.querySelector(".modal.raised")){ act("lower"); e.preventDefault(); return; }
     if($("modal").innerHTML){ closeModal(); e.preventDefault(); return; }
     if(screen === "prof" && !tUnlocked && e.key === "Backspace"){ act("pinc"); e.preventDefault(); return; }
     if(screen !== "home" && screen !== "who" && screen !== "boot" && cur()){ e.preventDefault(); act("home"); }
@@ -1769,11 +2163,11 @@ document.addEventListener("keydown", function(e){
       rb[(ri + dir + rb.length) % rb.length].focus();
     } else setTile(homeIdx + dir, true);
     e.preventDefault();
-  } else if(e.key === "ArrowDown" && !inR){
+  } else if(e.key === "ArrowDown" && inTiles){
     document.querySelector(".rbtn").focus(); e.preventDefault();
   } else if(e.key === "ArrowUp" && inR){
     setTile(homeIdx, true); e.preventDefault();
-  } else if(e.key === "ArrowDown" && inTiles === null && !inR){
+  } else if(e.key === "ArrowDown" && !inR){
     setTile(homeIdx, true); e.preventDefault();
   }
 });
