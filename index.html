@@ -385,6 +385,34 @@ body.calm .tile.on{animation:none}
 
 body.nomotion *,body.nomotion *:before,body.nomotion *:after{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* BOOST V3 - substantive illustrated UI */
+:root,:root[data-theme="light"],:root[data-theme="dark"]{--bg:#091225;--surface:#14243e;--surface2:#1a3150;--ink:#f5f8ff;--muted:#c3d4e8;--line:#3d5777;--bezel:#050910;color-scheme:dark}
+body{background:radial-gradient(ellipse at 5% 35%,#006ca6 0,transparent 37%),radial-gradient(ellipse at 94% 40%,#b11449 0,transparent 39%),#050a18;color:#fff}
+.shell{filter:drop-shadow(0 24px 45px #000b)}
+.screen{background:linear-gradient(150deg,#122746,#070e21 80%);color:#fff}
+.topbar{background:linear-gradient(180deg,#203c60,#101e35);border-bottom:1px solid #ffffff35;box-shadow:0 5px 20px #0005}
+.content{background:radial-gradient(ellipse at 45% 8%,#173d63 0,transparent 60%)}
+.tile-title{font-size:clamp(1.6rem,3vw,2.5rem);font-weight:900;color:#fff;text-shadow:0 3px 15px #000}
+.tiles{gap:20px;padding:20px 12px 32px;align-items:stretch}
+.tile.tile-visual{position:relative;isolation:isolate;flex:0 0 clamp(190px,24vw,265px);width:clamp(190px,24vw,265px);height:clamp(210px,28vw,290px);overflow:hidden;border:2px solid #ffffff60;border-radius:22px;background:#102b52;box-shadow:0 16px 28px #0009, inset 0 1px #fff5;transition:transform .2s,box-shadow .2s}
+.tile.tile-visual .art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--t1),var(--t2));font-size:90px;overflow:hidden}
+.tile.tile-visual .art:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 25% 20%,#fff8,transparent 32%),repeating-linear-gradient(145deg,transparent 0 22px,#fff1 23px 25px);mix-blend-mode:overlay}
+.tile.tile-visual .tile-symbol{position:relative;z-index:1;filter:drop-shadow(0 14px 10px #0008);transform:scale(1.2)}
+.tile.tile-visual:nth-child(1) .art{background:linear-gradient(0deg,#101b34a0,#101b3400 70%),url('illustration_1.webp') center/cover}
+.tile.tile-visual:nth-child(3) .art{background:linear-gradient(0deg,#07152b8c,#07152b15),url('illustration_3.webp') center/cover}
+.tile.tile-visual:nth-child(4) .art{background:linear-gradient(0deg,#07152b9c,#07152b15),url('illustration_2.webp') center/cover}
+.tile.tile-visual:nth-child(9) .art{background:linear-gradient(0deg,#07152b8c,#07152b15),url('illustration_4.webp') center/cover}
+.tile.tile-visual .nm{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:42px 12px 18px;background:linear-gradient(transparent,#061126f5 70%);color:white;font-weight:900;font-size:1.12rem;text-shadow:0 2px 8px #000}
+.tile.tile-visual .bdg{z-index:3;background:#091831e8;color:white;border:1px solid #ffffff75;box-shadow:0 3px 10px #0007}
+.tile.tile-visual.on,.tile.tile-visual:focus-visible{transform:translateY(-6px) scale(1.025);border-color:#fff;box-shadow:0 0 0 4px #25bfff,0 0 28px #20bfff,0 20px 36px #000a}
+.rbtn .c{background:linear-gradient(145deg,#375578,#14243c);color:#fff;box-shadow:inset 0 2px #fff5,0 7px 14px #0008;border:1px solid #ffffff50}
+.today div,.inbox{background:linear-gradient(140deg,#284768,#152641);border:1px solid #ffffff35;color:white}
+.hints{background:#0a1428;color:#e7efff}
+@media(min-width:900px){.grip{box-shadow:inset 7px 0 15px #fff4,inset -7px 0 16px #0007}.grip.l{background:linear-gradient(110deg,#24d6ff,#0090dd);border-radius:50px 0 0 50px}.grip.r{background:linear-gradient(110deg,#b80c3e,#ff3c61);border-radius:0 50px 50px 0}.screen{border:14px solid #060a13;box-shadow:inset 0 0 0 2px #526078,0 20px 60px #0009}.stick{background:radial-gradient(circle at 35% 25%,#48556a,#0a101d 80%);box-shadow:inset 0 0 0 4px #121a2b,0 6px 12px #0008}}
+@media(max-width:899px){.tile.tile-visual{width:clamp(170px,65vw,240px);flex-basis:clamp(170px,65vw,240px);height:240px}.tile-title{font-size:1.65rem}.tiles{gap:15px}.tile.tile-visual .art{font-size:75px}}
+@media(prefers-reduced-motion:reduce){.tile.tile-visual{transition:none}}
+
 </style>
 </head>
 <body>
@@ -1080,8 +1108,8 @@ function vHome(p){
   }
   h += '<div class="tile-title" id="ttitle" aria-live="polite">'+esc(TILES[homeIdx].t)+'</div><div class="tiles" id="tiles">';
   TILES.forEach(function(t, i){
-    h += '<button class="tile" data-a="go" data-v="'+t.id+'" data-i="'+i+'" style="--t1:'+t.c1+';--t2:'+t.c2+'" aria-label="'+esc(t.t)+'">'+
-      '<span class="art" aria-hidden="true">'+t.e+'</span><span class="nm">'+esc(t.t)+'</span>'+
+    h += '<button class="tile tile-visual" data-a="go" data-v="'+t.id+'" data-i="'+i+'" style="--t1:'+t.c1+';--t2:'+t.c2+'" aria-label="'+esc(t.t)+'">'+
+      '<span class="art" aria-hidden="true"><span class="tile-symbol">'+t.e+'</span></span><span class="nm">'+esc(t.t)+'</span>'+
       (badges[t.id] ? '<span class="bdg">'+badges[t.id]+'</span>' : '')+'</button>';
   });
   h += '</div><div class="rbtns" id="rbtns">';

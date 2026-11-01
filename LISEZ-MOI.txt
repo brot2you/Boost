@@ -1,0 +1,1 @@
+BOOST V3 - Illustration des cartes et habillage premium. Conservez index.html et les 4 images .webp ensemble à la racine du dépôt GitHub. Les fonctionnalités de BOOST sont conservées.
